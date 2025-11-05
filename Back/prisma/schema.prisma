@@ -1,0 +1,156 @@
+// WorkHQ Prisma Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Enums
+enum Role {
+  ADMIN
+  HR
+  EMPLOYEE
+}
+
+enum AttendanceType {
+  CHECKIN
+  CHECKOUT
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Models
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  fullName      String
+  role          Role           @default(EMPLOYEE)
+  avatarUrl     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  employee      Employee?
+}
+
+model Employee {
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  employeeCode    String            @unique
+  department      String?
+  designation     String?
+  joinDate        DateTime
+  salary          Float?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id])
+  attendance      Attendance[]
+  leaves          Leave[]
+  leaveBalances   LeaveBalance[]
+  salaryStructure SalaryStructure?
+  payslips        Payslip[]
+}
+
+model Location {
+  id           String       @id @default(uuid())
+  name         String
+  latitude     Float
+  longitude    Float
+  radiusMeters Int          @default(100)
+  createdAt    DateTime     @default(now())
+  attendance   Attendance[]
+}
+
+model Attendance {
+  id           String         @id @default(uuid())
+  employeeId   String
+  type         AttendanceType
+  timestamp    DateTime       @default(now())
+  latitude     Float?
+  longitude    Float?
+  locationId   String?
+  employee     Employee       @relation(fields: [employeeId], references: [id])
+  location     Location?      @relation(fields: [locationId], references: [id])
+}
+
+model LeaveType {
+  id            String         @id @default(uuid())
+  name          String
+  maxPerYear    Float?
+  isPaid        Boolean        @default(true)
+  leaves        Leave[]
+  leaveBalances LeaveBalance[]
+}
+
+model Leave {
+  id           String      @id @default(uuid())
+  employeeId   String
+  leaveTypeId  String
+  startDate    DateTime
+  endDate      DateTime
+  days         Float
+  reason       String?
+  status       LeaveStatus @default(PENDING)
+  remarks      String?
+  appliedAt    DateTime    @default(now())
+  decidedBy    String?
+  decidedAt    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  employee     Employee    @relation(fields: [employeeId], references: [id])
+  leaveType    LeaveType   @relation(fields: [leaveTypeId], references: [id])
+}
+
+model LeaveBalance {
+  id          String    @id @default(uuid())
+  employeeId  String
+  leaveTypeId String
+  balanceDays Float     @default(0)
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  leaveType   LeaveType @relation(fields: [leaveTypeId], references: [id])
+}
+
+model SalaryStructure {
+  id            String   @id @default(uuid())
+  employeeId    String   @unique
+  basicSalary   Float
+  hra           Float    @default(0)
+  allowances    Float    @default(0)
+  deductions    Float    @default(0)
+  grossSalary   Float
+  netSalary     Float
+  effectiveFrom DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  employee      Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Payslip {
+  id           String   @id @default(uuid())
+  employeeId   String
+  month        Int      // 1-12
+  year         Int
+  basicSalary  Float
+  hra          Float
+  allowances   Float
+  deductions   Float
+  grossSalary  Float
+  netSalary    Float
+  workingDays  Int
+  presentDays  Int
+  leaveDays    Int
+  fileUrl      String?  // URL to PDF if generated
+  status       String   @default("GENERATED") // GENERATED, SENT, VIEWED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  employee     Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, month, year])
+}

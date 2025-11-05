@@ -17,7 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.workhq.app",
       "config": {
-        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        "googleMapsApiKey": "AIzaSyAPzHKUv5HCr3PbM9v-cV5gggH7VZdXSv0"
       }
     },
     "android": {
@@ -30,7 +30,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
@@ -49,6 +51,13 @@
           "locationAlwaysAndWhenInUsePermission": "Allow WorkHQ to use your location for attendance tracking."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f5d2d8e4-fe4a-42a6-b0dc-5c72d4bc0a53"
+      }
+    },
+    "owner": "rifu"
   }
 }

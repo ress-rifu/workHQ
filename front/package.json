@@ -31,8 +31,14 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
+    "@types/react": "~18.2.45",
+    "typescript": "~5.3.3"
+  },
+  "overrides": {
+    "@types/react": "~18.2.45"
+  },
+  "resolutions": {
+    "@types/react": "~18.2.45"
   },
   "private": true
 }

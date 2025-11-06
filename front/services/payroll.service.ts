@@ -1,4 +1,4 @@
-import { apiRequest } from './api';
+import { api } from './api';
 
 export interface SalaryStructure {
   employeeId: string;

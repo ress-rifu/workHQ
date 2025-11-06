@@ -14,27 +14,33 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
+  const { colors } = useTheme();
 
+  // React Native compatible error handling
+  // Note: For comprehensive error handling, consider using react-native-error-boundary
   useEffect(() => {
-    const errorHandler = (error: ErrorEvent) => {
-      console.error('Global error:', error);
-      setError(error.error);
+    // Set up console error override for development debugging
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      // Check if this is an error we should handle
+      const firstArg = args[0];
+      if (firstArg instanceof Error && (firstArg.message.includes('Supabase') || firstArg.message.includes('Network'))) {
+        setError(firstArg);
+      }
+      originalConsoleError(...args);
     };
 
-    // @ts-ignore
-    window.addEventListener?.('error', errorHandler);
     return () => {
-      // @ts-ignore
-      window.removeEventListener?.('error', errorHandler);
+      console.error = originalConsoleError;
     };
   }, []);
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>⚠️ App Initialization Error</Text>
-        <Text style={styles.errorText}>{error.message}</Text>
-        <Text style={styles.errorHint}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorTitle, { color: colors.error }]}>⚠️ App Initialization Error</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>{error.message}</Text>
+        <Text style={[styles.errorHint, { color: colors.textTertiary }]}>
           Please check your .env file configuration
         </Text>
       </View>

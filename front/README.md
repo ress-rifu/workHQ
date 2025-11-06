@@ -108,7 +108,7 @@ The app uses Expo Router for file-based navigation:
 
 ## Environment Variables
 
-Required environment variables (see `env.example`):
+Required environment variables (see `.env.example`):
 - `EXPO_PUBLIC_SUPABASE_URL`: Supabase project URL
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
 - `EXPO_PUBLIC_BACKEND_API_URL`: Backend API URL

@@ -38,9 +38,9 @@ Mobile application for WorkHQ - HR Management System
 npm install
 ```
 
-2. Create a `.env` file based on `env.example`:
+2. Create a `.env` file based on `.env.example`:
 ```bash
-cp env.example .env
+cp .env.example .env
 ```
 
 3. Update the `.env` file with your credentials:

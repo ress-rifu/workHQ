@@ -54,7 +54,7 @@ export const payrollService = {
    * Get salary structure
    */
   async getSalaryStructure() {
-    return apiRequest<SalaryStructure>('/payroll/salary');
+    return api.get<SalaryStructure>('/payroll/salary');
   },
 
   /**
@@ -62,21 +62,21 @@ export const payrollService = {
    */
   async getPayslips(limit?: number) {
     const endpoint = limit ? `/payroll/payslips?limit=${limit}` : '/payroll/payslips';
-    return apiRequest<Payslip[]>(endpoint);
+    return api.get<Payslip[]>(endpoint);
   },
 
   /**
    * Get single payslip by ID
    */
   async getPayslipById(id: string) {
-    return apiRequest<Payslip>(`/payroll/payslips/${id}`);
+    return api.get<Payslip>(`/payroll/payslips/${id}`);
   },
 
   /**
    * Get payroll statistics
    */
   async getStats() {
-    return apiRequest<PayrollStats>('/payroll/stats');
+    return api.get<PayrollStats>('/payroll/stats');
   },
 
   /**

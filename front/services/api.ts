@@ -2,9 +2,10 @@
  * API Configuration and Utilities
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'http://localhost:5000';
+const API_URL = `${BACKEND_URL}/api`;
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -14,16 +15,15 @@ export interface ApiResponse<T = any> {
 }
 
 /**
- * Get auth token from AsyncStorage
+ * Get auth token from Supabase session
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    const sessionStr = await AsyncStorage.getItem('supabase_session');
-    if (sessionStr) {
-      const session = JSON.parse(sessionStr);
-      return session?.access_token || null;
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+      return null;
     }
-    return null;
+    return session.access_token;
   } catch (error) {
     console.error('Error getting auth token:', error);
     return null;

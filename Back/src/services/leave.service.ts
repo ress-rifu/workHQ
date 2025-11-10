@@ -14,6 +14,12 @@ export const leaveService = {
    */
   async getLeaveTypes() {
     return await prisma.leaveType.findMany({
+      select: {
+        id: true,
+        name: true,
+        maxPerYear: true,
+        isPaid: true,
+      },
       orderBy: { name: 'asc' },
     });
   },
@@ -24,8 +30,17 @@ export const leaveService = {
   async getLeaveBalances(employeeId: string) {
     return await prisma.leaveBalance.findMany({
       where: { employeeId },
-      include: {
-        leaveType: true,
+      select: {
+        id: true,
+        balanceDays: true,
+        leaveType: {
+          select: {
+            id: true,
+            name: true,
+            maxPerYear: true,
+            isPaid: true,
+          },
+        },
       },
       orderBy: {
         leaveType: {
@@ -47,8 +62,24 @@ export const leaveService = {
 
     return await prisma.leave.findMany({
       where,
-      include: {
-        leaveType: true,
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        days: true,
+        reason: true,
+        status: true,
+        appliedAt: true,
+        decidedAt: true,
+        remarks: true,
+        leaveType: {
+          select: {
+            id: true,
+            name: true,
+            maxPerYear: true,
+            isPaid: true,
+          },
+        },
       },
       orderBy: {
         appliedAt: 'desc',
@@ -65,11 +96,35 @@ export const leaveService = {
         id: leaveId,
         employeeId,
       },
-      include: {
-        leaveType: true,
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        days: true,
+        reason: true,
+        status: true,
+        appliedAt: true,
+        decidedAt: true,
+        decidedBy: true,
+        remarks: true,
+        leaveType: {
+          select: {
+            id: true,
+            name: true,
+            maxPerYear: true,
+            isPaid: true,
+          },
+        },
         employee: {
-          include: {
-            user: true,
+          select: {
+            id: true,
+            employeeCode: true,
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+              },
+            },
           },
         },
       },
@@ -174,8 +229,22 @@ export const leaveService = {
         reason,
         status: 'PENDING',
       },
-      include: {
-        leaveType: true,
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        days: true,
+        reason: true,
+        status: true,
+        appliedAt: true,
+        leaveType: {
+          select: {
+            id: true,
+            name: true,
+            maxPerYear: true,
+            isPaid: true,
+          },
+        },
       },
     });
 
@@ -204,8 +273,22 @@ export const leaveService = {
     return await prisma.leave.update({
       where: { id: leaveId },
       data: { status: 'CANCELLED' },
-      include: {
-        leaveType: true,
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        days: true,
+        reason: true,
+        status: true,
+        appliedAt: true,
+        leaveType: {
+          select: {
+            id: true,
+            name: true,
+            maxPerYear: true,
+            isPaid: true,
+          },
+        },
       },
     });
   },

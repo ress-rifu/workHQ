@@ -15,8 +15,24 @@ export const profileService = {
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        employee: true,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        employee: {
+          select: {
+            id: true,
+            employeeCode: true,
+            department: true,
+            designation: true,
+            joinDate: true,
+            salary: true,
+          },
+        },
       },
     });
 
@@ -41,8 +57,24 @@ export const profileService = {
     const user = await prisma.user.update({
       where: { id: userId },
       data: userUpdateData,
-      include: {
-        employee: true,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        employee: {
+          select: {
+            id: true,
+            employeeCode: true,
+            department: true,
+            designation: true,
+            joinDate: true,
+            salary: true,
+          },
+        },
       },
     });
 
@@ -61,8 +93,24 @@ export const profileService = {
         // Fetch updated user with employee
         return await prisma.user.findUnique({
           where: { id: userId },
-          include: {
-            employee: true,
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            avatarUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            employee: {
+              select: {
+                id: true,
+                employeeCode: true,
+                department: true,
+                designation: true,
+                joinDate: true,
+                salary: true,
+              },
+            },
           },
         });
       }
@@ -77,8 +125,12 @@ export const profileService = {
   async getProfileStats(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        employee: true,
+      select: {
+        employee: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -86,13 +138,22 @@ export const profileService = {
       return null;
     }
 
-    // Get leave balance
+    // Get leave balance - only fetch needed fields
     const leaveBalances = await prisma.leaveBalance.findMany({
       where: {
         employeeId: user.employee.id,
       },
-      include: {
-        leaveType: true,
+      select: {
+        id: true,
+        balanceDays: true,
+        leaveType: {
+          select: {
+            id: true,
+            name: true,
+            maxPerYear: true,
+            isPaid: true,
+          },
+        },
       },
     });
 

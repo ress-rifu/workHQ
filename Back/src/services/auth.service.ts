@@ -109,9 +109,25 @@ export const createUser = async (input: CreateUserInput): Promise<UserResponse> 
 export const getUserProfile = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: {
-      employee: true
-    }
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      employee: {
+        select: {
+          id: true,
+          employeeCode: true,
+          department: true,
+          designation: true,
+          joinDate: true,
+          salary: true,
+        },
+      },
+    },
   });
 
   if (!user) {
@@ -131,9 +147,25 @@ export const updateUserProfile = async (userId: string, data: {
   const user = await prisma.user.update({
     where: { id: userId },
     data,
-    include: {
-      employee: true
-    }
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      employee: {
+        select: {
+          id: true,
+          employeeCode: true,
+          department: true,
+          designation: true,
+          joinDate: true,
+          salary: true,
+        },
+      },
+    },
   });
 
   return user;

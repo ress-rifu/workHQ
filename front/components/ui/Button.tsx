@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -26,7 +26,7 @@ interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   textStyle?: TextStyle;
 }
 
-export function Button({
+export const Button = React.memo(function Button({
   title,
   variant = 'primary',
   size = 'md',
@@ -43,39 +43,39 @@ export function Button({
 
   const isDisabled = disabled || loading;
 
-  // Size styles
-  const sizeStyles = {
-    sm: {
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.md,
-      minHeight: 36,
-    },
-    md: {
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.lg,
-      minHeight: 44,
-    },
-    lg: {
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.xl,
-      minHeight: 52,
-    },
-  };
+  // Memoize size styles
+  const sizeStyle = useMemo(() => {
+    const sizes = {
+      sm: {
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.md,
+        minHeight: 36,
+      },
+      md: {
+        paddingVertical: Spacing.md,
+        paddingHorizontal: Spacing.lg,
+        minHeight: 44,
+      },
+      lg: {
+        paddingVertical: Spacing.lg,
+        paddingHorizontal: Spacing.xl,
+        minHeight: 52,
+      },
+    };
+    return sizes[size];
+  }, [size]);
 
-  const textSizeStyles = {
-    sm: {
-      fontSize: Typography.fontSize.sm,
-    },
-    md: {
-      fontSize: Typography.fontSize.base,
-    },
-    lg: {
-      fontSize: Typography.fontSize.lg,
-    },
-  };
+  const textSizeStyle = useMemo(() => {
+    const sizes = {
+      sm: { fontSize: Typography.fontSize.sm },
+      md: { fontSize: Typography.fontSize.base },
+      lg: { fontSize: Typography.fontSize.lg },
+    };
+    return sizes[size];
+  }, [size]);
 
-  // Variant styles
-  const getVariantStyles = (): ViewStyle => {
+  // Memoize variant styles
+  const variantStyles = useMemo((): ViewStyle => {
     switch (variant) {
       case 'primary':
         return {
@@ -102,9 +102,9 @@ export function Button({
       default:
         return {};
     }
-  };
+  }, [variant, isDisabled, colors]);
 
-  const getTextColor = (): string => {
+  const textColor = useMemo((): string => {
     if (isDisabled) {
       return colors.textTertiary;
     }
@@ -120,7 +120,7 @@ export function Button({
       default:
         return colors.text;
     }
-  };
+  }, [variant, isDisabled, colors]);
 
   return (
     <TouchableOpacity
@@ -130,8 +130,8 @@ export function Button({
       activeOpacity={0.7}
       style={[
         styles.button,
-        sizeStyles[size],
-        getVariantStyles(),
+        sizeStyle,
+        variantStyles,
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
@@ -148,8 +148,8 @@ export function Button({
           <Text
             style={[
               styles.text,
-              textSizeStyles[size],
-              { color: getTextColor() },
+              textSizeStyle,
+              { color: textColor },
               icon && styles.textWithIcon,
               textStyle,
             ]}
@@ -160,7 +160,7 @@ export function Button({
       )}
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   button: {

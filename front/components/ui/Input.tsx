@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Typography, Spacing, BorderRadius } from '../../constants/theme';
+import { Typography, spacing, radius } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 interface InputProps extends TextInputProps {
@@ -43,11 +43,13 @@ export function Input({
   const showPasswordToggle = isPassword;
   const actualSecureTextEntry = isPassword && !isPasswordVisible;
 
+  // Friendly filled background style
+  const inputBackgroundColor = isDark ? colors.surface : colors.surfaceVariant;
   const borderColor = error
     ? colors.error
     : isFocused
     ? colors.primary
-    : colors.border;
+    : 'transparent'; // No border when not focused
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -64,10 +66,10 @@ export function Input({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: isDark ? colors.backgroundSecondary : colors.background,
+            backgroundColor: inputBackgroundColor,
             borderColor,
+            borderWidth: isFocused || error ? 2 : 0, // Show border only when focused or error
           },
-          isFocused && styles.inputFocused,
         ]}
       >
         {leftIcon && (
@@ -151,51 +153,48 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     flexDirection: 'row',
-    marginBottom: Spacing.xs,
+    marginBottom: spacing.sm,
   },
   label: {
     fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
+    fontFamily: Typography.fontFamily.semibold, // Bolder for clarity
   },
   required: {
     fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
+    fontFamily: Typography.fontFamily.semibold,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: BorderRadius.lg,
-    minHeight: 48,
-    paddingHorizontal: Spacing.md,
-  },
-  inputFocused: {
-    borderWidth: 2,
+    borderRadius: radius.md, // Soft rounded corners
+    minHeight: 52, // Generous height
+    paddingHorizontal: spacing.lg, // Generous padding
+    paddingVertical: spacing.xs,
   },
   input: {
     flex: 1,
     fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.regular,
-    paddingVertical: Spacing.sm,
+    paddingVertical: spacing.sm,
   },
   inputWithLeftIcon: {
-    marginLeft: Spacing.xs,
+    marginLeft: spacing.sm,
   },
   inputWithRightIcon: {
-    marginRight: Spacing.xs,
+    marginRight: spacing.sm,
   },
   leftIcon: {
-    marginRight: Spacing.xs,
+    marginRight: spacing.sm,
   },
   rightIcon: {
-    marginLeft: Spacing.xs,
-    padding: Spacing.xs,
+    marginLeft: spacing.sm,
+    padding: spacing.xs,
   },
   messageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.xs,
-    gap: Spacing.xs,
+    marginTop: spacing.sm,
+    gap: spacing.xs,
   },
   errorText: {
     fontSize: Typography.fontSize.sm,
@@ -204,7 +203,7 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.regular,
-    marginTop: Spacing.xs,
+    marginTop: spacing.sm,
   },
 });
 

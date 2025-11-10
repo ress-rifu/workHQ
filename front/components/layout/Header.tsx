@@ -2,8 +2,11 @@ import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Typography, Spacing, Layout } from '../../constants/theme';
+import { Typography, spacing, radius } from '../../constants/theme';
+
+export type HeaderVariant = 'default' | 'gradient' | 'transparent';
 
 interface HeaderProps {
   title?: string;
@@ -12,6 +15,8 @@ interface HeaderProps {
   onBackPress?: () => void;
   rightAction?: ReactNode;
   style?: ViewStyle;
+  variant?: HeaderVariant;
+  large?: boolean;
 }
 
 export function Header({
@@ -21,9 +26,12 @@ export function Header({
   onBackPress,
   rightAction,
   style,
+  variant = 'default',
+  large = false,
 }: HeaderProps) {
   const { colors } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -33,96 +41,152 @@ export function Header({
     }
   };
 
+  const getBackgroundStyle = () => {
+    switch (variant) {
+      case 'gradient':
+        return { backgroundColor: colors.primary };
+      case 'transparent':
+        return { backgroundColor: 'transparent' };
+      default:
+        return {
+          backgroundColor: colors.card,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderLight,
+        };
+    }
+  };
+
+  const getTextColor = () => {
+    return variant === 'gradient' ? '#FFFFFF' : colors.text;
+  };
+
+  const getSubtitleColor = () => {
+    return variant === 'gradient' ? 'rgba(255, 255, 255, 0.9)' : colors.textSecondary;
+  };
+
   return (
     <View
       style={[
-        styles.header,
-        {
-          backgroundColor: colors.background,
-          borderBottomColor: colors.border,
-        },
+        styles.container,
+        getBackgroundStyle(),
+        { paddingTop: insets.top + spacing.md },
         style,
       ]}
     >
-      <View style={styles.leftSection}>
-        {showBack && (
-          <TouchableOpacity
-            onPress={handleBackPress}
-            style={styles.backButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-        )}
-      </View>
+      <View style={styles.content}>
+        <View style={styles.leftSection}>
+          {showBack && (
+            <TouchableOpacity
+              onPress={handleBackPress}
+              style={styles.backButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <View style={[
+                styles.iconButton,
+                variant === 'gradient' && styles.iconButtonGradient,
+                variant === 'transparent' && { backgroundColor: colors.card }
+              ]}>
+                <Ionicons 
+                  name="arrow-back" 
+                  size={20} 
+                  color={variant === 'transparent' ? colors.text : getTextColor()} 
+                />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
 
-      <View style={styles.centerSection}>
-        {title && (
-          <Text
-            style={[
-              styles.title,
-              {
-                color: colors.text,
-              },
-            ]}
-            numberOfLines={1}
-          >
-            {title}
-          </Text>
-        )}
-        {subtitle && (
-          <Text
-            style={[
-              styles.subtitle,
-              {
-                color: colors.textSecondary,
-              },
-            ]}
-            numberOfLines={1}
-          >
-            {subtitle}
-          </Text>
-        )}
-      </View>
+        <View style={[styles.centerSection, large && styles.centerSectionLarge]}>
+          {title && (
+            <Text
+              style={[
+                large ? styles.titleLarge : styles.title,
+                { color: getTextColor() },
+              ]}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+          )}
+          {subtitle && (
+            <Text
+              style={[
+                styles.subtitle,
+                { color: getSubtitleColor() },
+              ]}
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Text>
+          )}
+        </View>
 
-      <View style={styles.rightSection}>{rightAction}</View>
+        <View style={styles.rightSection}>{rightAction}</View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  container: {
+    paddingBottom: spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: Layout.headerHeight,
-    paddingHorizontal: Spacing.md,
-    borderBottomWidth: 1,
+    paddingHorizontal: spacing.md,
+    minHeight: 56,
   },
   leftSection: {
-    width: 40,
+    minWidth: 40,
     alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   centerSection: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  centerSectionLarge: {
+    alignItems: 'flex-start',
   },
   rightSection: {
-    width: 40,
+    minWidth: 40,
     alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   backButton: {
-    padding: Spacing.xs,
+    padding: spacing.xs,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButtonGradient: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   title: {
     fontSize: Typography.fontSize.lg,
-    fontFamily: Typography.fontFamily.semibold,
+    fontFamily: Typography.fontFamily.bold,
+  },
+  titleLarge: {
+    fontSize: Typography.fontSize['2xl'],
+    fontFamily: Typography.fontFamily.bold,
   },
   subtitle: {
     fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.regular,
-    marginTop: 2,
+    fontFamily: Typography.fontFamily.medium,
+    marginTop: spacing.xs,
   },
 });
 

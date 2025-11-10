@@ -10,17 +10,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { attendanceService, TodayStatus } from '../../services/attendance.service';
 import { leaveService, LeaveBalance } from '../../services/leave.service';
 import { profileService, ProfileStats } from '../../services/profile.service';
+import { hrService, HRStats } from '../../services/hr.service';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { colors } = useTheme();
 
   const [todayStatus, setTodayStatus] = useState<TodayStatus | null>(null);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
+  const [hrStats, setHRStats] = useState<HRStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   useEffect(() => {
     loadDashboardData();
@@ -30,11 +34,19 @@ export default function HomeScreen() {
     try {
       setLoading(true);
 
-      const [todayRes, balancesRes, statsRes] = await Promise.all([
+      const promises = [
         attendanceService.getTodayStatus(),
         leaveService.getLeaveBalances(),
         profileService.getProfileStats(),
-      ]);
+      ];
+
+      // Add HR stats if user is HR or Admin
+      if (isHROrAdmin) {
+        promises.push(hrService.getHRStats());
+      }
+
+      const results = await Promise.all(promises);
+      const [todayRes, balancesRes, statsRes, hrStatsRes] = results;
 
       if (todayRes.success && todayRes.data) {
         setTodayStatus(todayRes.data);
@@ -46,6 +58,10 @@ export default function HomeScreen() {
 
       if (statsRes.success && statsRes.data) {
         setProfileStats(statsRes.data);
+      }
+
+      if (hrStatsRes && hrStatsRes.success && hrStatsRes.data) {
+        setHRStats(hrStatsRes.data);
       }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
@@ -122,6 +138,26 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
             <View style={styles.quickActions}>
+              {isHROrAdmin && hrStats && (
+                <Card 
+                  style={styles.actionCard} 
+                  shadow="sm" 
+                  onPress={() => router.push('/hr' as any)}
+                >
+                  <View style={[styles.iconCircle, { backgroundColor: colors.errorLight }]}>
+                    <Ionicons name="briefcase" size={24} color={colors.error} />
+                  </View>
+                  <Text style={[styles.actionTitle, { color: colors.text }]}>
+                    Leave Requests
+                  </Text>
+                  {hrStats.pendingLeaves > 0 && (
+                    <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                      <Text style={styles.badgeText}>{hrStats.pendingLeaves}</Text>
+                    </View>
+                  )}
+                </Card>
+              )}
+
               <Card 
                 style={styles.actionCard} 
                 shadow="sm" 
@@ -324,6 +360,22 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.semibold,
+  },
+  badge: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xs,
+  },
+  badgeText: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.bold,
+    color: '#FFFFFF',
   },
   statusRow: {
     flexDirection: 'row',

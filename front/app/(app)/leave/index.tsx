@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, Alert } from 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, Header } from '../../../components/layout';
+import { Screen, AppHeader } from '../../../components/layout';
 import { Card, Badge, Button, Divider, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -116,18 +116,15 @@ export default function LeaveScreen() {
   }
 
   return (
-    <Screen scrollable safe padding={false} 
-      contentContainerStyle={{ 
-        refreshControl: <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> 
-      }}
-    >
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Leave Management</Text>
-          <Text style={styles.headerSubtitle}>Manage your time off</Text>
-        </View>
-      </View>
+    <Screen scrollable safe padding={false} hasHeader>
+      <AppHeader
+        title="Leave Management"
+        subtitle="Manage your time off"
+        rightAction={{
+          icon: 'add-circle',
+          onPress: () => router.push('/leave/apply' as any),
+        }}
+      />
 
       <View style={styles.content}>
         {/* Leave Balances */}
@@ -244,26 +241,6 @@ export default function LeaveScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-  },
-  headerContent: {
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize['3xl'],
-    fontFamily: Typography.fontFamily.bold,
-    color: '#FFFFFF',
-  },
-  headerSubtitle: {
-    fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.regular,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginTop: Spacing.xs,
-  },
   content: {
     padding: Spacing.md,
   },

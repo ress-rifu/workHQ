@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, Header } from '../../../components/layout';
+import { Screen, AppHeader } from '../../../components/layout';
 import { Button, Card, Badge, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,8 +19,8 @@ export default function AttendanceScreen() {
   // Show web-specific message if on web
   if (isWeb) {
     return (
-      <Screen>
-        <Header title="Attendance" />
+      <Screen hasHeader>
+        <AppHeader title="Attendance" subtitle="Check In & Out" />
         <View style={[styles.webMessage, { backgroundColor: colors.background }]}>
           <Ionicons name="phone-portrait-outline" size={64} color={colors.primary} />
           <Text style={[styles.webMessageTitle, { color: colors.text }]}>
@@ -300,11 +300,12 @@ function AttendanceScreenMobile() {
   const canCheckOut = todayStatus?.hasCheckedIn && !todayStatus?.hasCheckedOut && !checking;
 
   return (
-    <Screen safe padding={false}>
-      <Header
+    <Screen safe padding={false} hasHeader>
+      <AppHeader
         title="Attendance"
-        action={{
-          icon: <Ionicons name="time-outline" size={24} color={colors.primary} />,
+        subtitle="Check In & Out"
+        rightAction={{
+          icon: 'time-outline',
           onPress: () => router.push('/attendance/history' as any),
         }}
       />

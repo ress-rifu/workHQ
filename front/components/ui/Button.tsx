@@ -1,15 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
-  TouchableOpacity,
   Text,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
   TextStyle,
   TouchableOpacityProps,
+  Pressable,
+  Animated,
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Typography, Spacing, BorderRadius } from '../../constants/theme';
+import { Typography, spacing, radius } from '../../constants/theme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -40,26 +41,46 @@ export const Button = React.memo(function Button({
   ...props
 }: ButtonProps) {
   const { colors } = useTheme();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const isDisabled = disabled || loading;
 
-  // Memoize size styles
+  // Bouncy press animation using React Native's built-in Animated
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      friction: 5,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // Memoize size styles with new spacing tokens
   const sizeStyle = useMemo(() => {
     const sizes = {
       sm: {
-        paddingVertical: Spacing.sm,
-        paddingHorizontal: Spacing.md,
-        minHeight: 36,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        minHeight: 40,
       },
       md: {
-        paddingVertical: Spacing.md,
-        paddingHorizontal: Spacing.lg,
-        minHeight: 44,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+        minHeight: 48,
       },
       lg: {
-        paddingVertical: Spacing.lg,
-        paddingHorizontal: Spacing.xl,
-        minHeight: 52,
+        paddingVertical: spacing.lg,
+        paddingHorizontal: spacing.xxl,
+        minHeight: 56,
       },
     };
     return sizes[size];
@@ -123,42 +144,49 @@ export const Button = React.memo(function Button({
   }, [variant, isDisabled, colors]);
 
   return (
-    <TouchableOpacity
-      {...props}
-      onPress={onPress}
-      disabled={isDisabled}
-      activeOpacity={0.7}
+    <Animated.View 
       style={[
-        styles.button,
-        sizeStyle,
-        variantStyles,
+        { transform: [{ scale: scaleAnim }] },
         fullWidth && styles.fullWidth,
-        isDisabled && styles.disabled,
-        style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : colors.primary}
-          size="small"
-        />
-      ) : (
-        <>
-          {icon && <>{icon}</>}
-          <Text
-            style={[
-              styles.text,
-              textSizeStyle,
-              { color: textColor },
-              icon && styles.textWithIcon,
-              textStyle,
-            ]}
-          >
-            {title}
-          </Text>
-        </>
-      )}
-    </TouchableOpacity>
+      <Pressable
+        {...props}
+        onPress={onPress}
+        onPressIn={isDisabled ? undefined : handlePressIn}
+        onPressOut={isDisabled ? undefined : handlePressOut}
+        disabled={isDisabled}
+        style={[
+          styles.button,
+          sizeStyle,
+          variantStyles,
+          isDisabled && styles.disabled,
+          style,
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator
+            color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : colors.primary}
+            size="small"
+          />
+        ) : (
+          <>
+            {icon && <>{icon}</>}
+            <Text
+              style={[
+                styles.text,
+                textSizeStyle,
+                { color: textColor },
+                icon && styles.textWithIcon,
+                textStyle,
+              ]}
+            >
+              {title}
+            </Text>
+          </>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 });
 
@@ -167,21 +195,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
+    borderRadius: radius.full, // Pill-shaped buttons!
+    gap: spacing.sm,
   },
   fullWidth: {
     width: '100%',
   },
   disabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   text: {
-    fontFamily: Typography.fontFamily.semibold,
+    fontFamily: Typography.fontFamily.bold, // Bold for friendly confidence
     textAlign: 'center',
   },
   textWithIcon: {
-    marginLeft: Spacing.xs,
+    marginLeft: spacing.xs,
   },
 });
 

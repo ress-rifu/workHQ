@@ -8,9 +8,9 @@ import {
   ViewStyle,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Layout } from '../../constants/theme';
+import { Layout, spacing } from '../../constants/theme';
 
 interface ScreenProps {
   children: ReactNode;
@@ -20,6 +20,7 @@ interface ScreenProps {
   contentContainerStyle?: ViewStyle;
   padding?: boolean;
   keyboardAvoiding?: boolean;
+  hasHeader?: boolean;
 }
 
 export function Screen({
@@ -30,8 +31,10 @@ export function Screen({
   contentContainerStyle,
   padding = true,
   keyboardAvoiding = true,
+  hasHeader = false,
 }: ScreenProps) {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const screenStyle: ViewStyle = {
     flex: 1,
@@ -40,12 +43,25 @@ export function Screen({
 
   const paddingStyle = padding ? { padding: Layout.screenPadding } : {};
 
+  // Add bottom padding to account for absolute-positioned tab bar
+  const tabBarSpacing = Layout.tabBarHeight + insets.bottom + spacing.md + spacing.xl;
+  
+  // Add top padding if there's a fixed header (AppHeader is ~80px with safe area)
+  const headerSpacing = hasHeader ? 80 + insets.top + spacing.md : 0;
+  
+  const scrollContentStyle: ViewStyle = scrollable 
+    ? { 
+        paddingBottom: tabBarSpacing,
+        paddingTop: headerSpacing,
+      }
+    : { paddingTop: headerSpacing };
+
   const Wrapper = safe ? SafeAreaView : View;
 
   const content = scrollable ? (
     <ScrollView
       style={[screenStyle, style]}
-      contentContainerStyle={[paddingStyle, contentContainerStyle]}
+      contentContainerStyle={[paddingStyle, scrollContentStyle, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
@@ -64,7 +80,8 @@ export function Screen({
       {keyboardAvoiding ? (
         <KeyboardAvoidingView
           style={styles.keyboardAvoid}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           {content}
         </KeyboardAvoidingView>

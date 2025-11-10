@@ -1,12 +1,12 @@
 import React, { ReactNode, useMemo } from 'react';
 import { View, StyleSheet, ViewStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Spacing, BorderRadius, Shadows } from '../../constants/theme';
+import { spacing, radius, Shadows } from '../../constants/theme';
 
 interface CardProps {
   children: ReactNode;
   style?: ViewStyle;
-  padding?: keyof typeof Spacing;
+  padding?: keyof typeof spacing;
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   onPress?: () => void;
   touchableProps?: Omit<TouchableOpacityProps, 'style' | 'onPress'>;
@@ -15,7 +15,7 @@ interface CardProps {
 export const Card = React.memo(function Card({
   children,
   style,
-  padding = 'md',
+  padding = 'lg', // Default to generous spacing
   shadow = 'md',
   onPress,
   touchableProps,
@@ -25,10 +25,9 @@ export const Card = React.memo(function Card({
   const combinedStyle = useMemo(() => {
     const cardStyle: ViewStyle = {
       backgroundColor: colors.card,
-      borderRadius: BorderRadius.xl,
-      padding: Spacing[padding],
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderRadius: radius.lg, // Soft, rounded corners
+      padding: spacing[padding],
+      borderWidth: 0, // Remove border for cleaner look
     };
 
     const shadowStyle = shadow !== 'none' ? Shadows[shadow] : {};

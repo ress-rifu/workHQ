@@ -8,4 +8,11 @@ const config = getDefaultConfig(__dirname);
 config.resetCache = true;
 config.cacheStores = [];
 
+// Fix React Query module resolution
+config.resolver = {
+  ...config.resolver,
+  unstable_enablePackageExports: true,
+  unstable_conditionNames: ['react-native', 'browser', 'require'],
+};
+
 module.exports = config;

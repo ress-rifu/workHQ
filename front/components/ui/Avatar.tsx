@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Typography, BorderRadius } from '../../constants/theme';
 
@@ -55,7 +56,13 @@ export function Avatar({ uri, name, size = 'md', style }: AvatarProps) {
   if (uri) {
     return (
       <View style={[avatarStyle, style]}>
-        <Image source={{ uri }} style={styles.image} />
+        <Image 
+          source={{ uri }} 
+          style={styles.image}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+        />
       </View>
     );
   }

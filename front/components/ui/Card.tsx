@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import { View, StyleSheet, ViewStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Spacing, BorderRadius, Shadows } from '../../constants/theme';
@@ -12,7 +12,7 @@ interface CardProps {
   touchableProps?: Omit<TouchableOpacityProps, 'style' | 'onPress'>;
 }
 
-export function Card({
+export const Card = React.memo(function Card({
   children,
   style,
   padding = 'md',
@@ -22,17 +22,19 @@ export function Card({
 }: CardProps) {
   const { colors } = useTheme();
 
-  const cardStyle: ViewStyle = {
-    backgroundColor: colors.card,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing[padding],
-    borderWidth: 1,
-    borderColor: colors.border,
-  };
+  const combinedStyle = useMemo(() => {
+    const cardStyle: ViewStyle = {
+      backgroundColor: colors.card,
+      borderRadius: BorderRadius.xl,
+      padding: Spacing[padding],
+      borderWidth: 1,
+      borderColor: colors.border,
+    };
 
-  const shadowStyle = shadow !== 'none' ? Shadows[shadow] : {};
+    const shadowStyle = shadow !== 'none' ? Shadows[shadow] : {};
 
-  const combinedStyle = [cardStyle, shadowStyle, style];
+    return [cardStyle, shadowStyle, style];
+  }, [colors, padding, shadow, style]);
 
   if (onPress) {
     return (
@@ -48,7 +50,7 @@ export function Card({
   }
 
   return <View style={combinedStyle}>{children}</View>;
-}
+});
 
 
 

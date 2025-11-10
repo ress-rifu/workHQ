@@ -200,7 +200,8 @@ export const attendanceService = {
     employeeId: string,
     startDate?: Date,
     endDate?: Date,
-    limit: number = 30
+    limit: number = 30,
+    cursor?: string // Cursor for pagination (attendance ID)
   ) {
     const where: any = { employeeId };
 
@@ -214,20 +215,53 @@ export const attendanceService = {
       }
     }
 
+    // Fetch one extra record to determine if there are more pages
     const attendance = await prisma.attendance.findMany({
       where,
       orderBy: {
         timestamp: 'desc',
       },
-      take: limit,
-      include: {
-        location: true,
+      take: limit + 1,
+      ...(cursor && {
+        cursor: { id: cursor },
+        skip: 1, // Skip the cursor record itself
+      }),
+      select: {
+        id: true,
+        employeeId: true,
+        type: true,
+        timestamp: true,
+        latitude: true,
+        longitude: true,
+        location: {
+          select: {
+            id: true,
+            name: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
       },
     });
 
+    // Check if there are more results
+    const hasMore = attendance.length > limit;
+    const records = hasMore ? attendance.slice(0, limit) : attendance;
+
+    // Get next cursor (last record's ID)
+    const nextCursor = hasMore && records.length > 0 ? records[records.length - 1].id : null;
+
     // Group by date
-    const grouped = this.groupAttendanceByDate(attendance);
-    return grouped;
+    const grouped = this.groupAttendanceByDate(records);
+
+    return {
+      data: grouped,
+      pagination: {
+        hasMore,
+        nextCursor,
+        limit,
+      },
+    };
   },
 
   /**

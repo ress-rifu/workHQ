@@ -96,6 +96,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Check if backend API is configured
+      if (!process.env.EXPO_PUBLIC_BACKEND_API_URL) {
+        console.warn('Backend API URL not configured');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_API_URL}/api/auth/profile`,
         {
@@ -110,10 +117,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
         setProfile(data.user);
       } else {
-        console.error('Failed to fetch profile');
+        const errorText = await response.text();
+        console.error('Failed to fetch profile:', response.status, errorText);
+        
+        // Don't block auth if profile fetch fails
+        // User is still authenticated via Supabase
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // Don't block auth if profile fetch fails
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { Role } from '@prisma/client';
+import { cache, cacheKeys, cacheTTL } from '../utils/cache';
 
 interface UpdateProfileData {
   fullName?: string;
@@ -13,6 +14,11 @@ export const profileService = {
    * Get user profile with employee details
    */
   async getProfile(userId: string) {
+    // Check cache first
+    const cacheKey = cacheKeys.userProfile(userId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -40,6 +46,8 @@ export const profileService = {
       throw new Error('User not found');
     }
 
+    // Cache for 5 minutes
+    cache.set(cacheKey, user, cacheTTL.medium);
     return user;
   },
 
@@ -91,7 +99,7 @@ export const profileService = {
         });
 
         // Fetch updated user with employee
-        return await prisma.user.findUnique({
+        const updatedUser = await prisma.user.findUnique({
           where: { id: userId },
           select: {
             id: true,
@@ -113,7 +121,21 @@ export const profileService = {
             },
           },
         });
+
+        // Invalidate cache
+        cache.delete(cacheKeys.userProfile(userId));
+        if (user.employee?.id) {
+          cache.delete(cacheKeys.employeeStats(user.employee.id));
+        }
+
+        return updatedUser;
       }
+    }
+
+    // Invalidate cache
+    cache.delete(cacheKeys.userProfile(userId));
+    if (user.employee?.id) {
+      cache.delete(cacheKeys.employeeStats(user.employee.id));
     }
 
     return user;
@@ -137,6 +159,11 @@ export const profileService = {
     if (!user || !user.employee) {
       return null;
     }
+
+    // Check cache first (1 minute cache for stats)
+    const cacheKey = cacheKeys.employeeStats(user.employee.id);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
 
     // Get leave balance - only fetch needed fields
     const leaveBalances = await prisma.leaveBalance.findMany({
@@ -186,12 +213,16 @@ export const profileService = {
       0
     );
 
-    return {
+    const stats = {
       leaveBalances,
       attendanceThisMonth: attendanceCount,
       pendingLeaves: pendingLeavesCount,
       totalLeaveBalance,
     };
+
+    // Cache for 1 minute (frequently changing data)
+    cache.set(cacheKey, stats, cacheTTL.short);
+    return stats;
   },
 };
 

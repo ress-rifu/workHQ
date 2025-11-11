@@ -1,5 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { LeaveStatus } from '@prisma/client';
+import { cache, cacheKeys, cacheTTL } from '../utils/cache';
 
 interface ApplyLeaveData {
   leaveTypeId: string;
@@ -13,7 +14,12 @@ export const leaveService = {
    * Get all leave types
    */
   async getLeaveTypes() {
-    return await prisma.leaveType.findMany({
+    // Cache for 1 hour (static data)
+    const cacheKey = cacheKeys.leaveTypes();
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    const types = await prisma.leaveType.findMany({
       select: {
         id: true,
         name: true,
@@ -22,13 +28,21 @@ export const leaveService = {
       },
       orderBy: { name: 'asc' },
     });
+
+    cache.set(cacheKey, types, cacheTTL.veryLong);
+    return types;
   },
 
   /**
    * Get leave balances for an employee
    */
   async getLeaveBalances(employeeId: string) {
-    return await prisma.leaveBalance.findMany({
+    // Cache for 5 minutes
+    const cacheKey = cacheKeys.leaveBalances(employeeId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    const balances = await prisma.leaveBalance.findMany({
       where: { employeeId },
       select: {
         id: true,
@@ -48,6 +62,9 @@ export const leaveService = {
         },
       },
     });
+
+    cache.set(cacheKey, balances, cacheTTL.medium);
+    return balances;
   },
 
   /**

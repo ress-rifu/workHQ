@@ -31,7 +31,7 @@ async function getAuthToken(): Promise<string | null> {
 }
 
 /**
- * Make authenticated API request
+ * Make authenticated API request with timeout
  */
 export async function apiRequest<T = any>(
   endpoint: string,
@@ -52,18 +52,33 @@ export async function apiRequest<T = any>(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    // Create timeout controller (10 seconds timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const data = await response.json();
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Request failed');
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Request failed');
+      }
+
+      return data;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timeout - please check your connection');
+      }
+      throw fetchError;
     }
-
-    return data;
   } catch (error: any) {
     console.error(`API Error [${endpoint}]:`, error);
     return {

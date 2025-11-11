@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AttendanceType } from '@prisma/client';
 import { calculateDistance, isWithinRadius } from '../utils/geofencing';
+import { cache, cacheKeys, cacheTTL } from '../utils/cache';
 
 interface CheckInData {
   latitude: number;
@@ -18,9 +19,17 @@ export const attendanceService = {
    * Get active office locations
    */
   async getActiveLocations() {
-    return await prisma.location.findMany({
+    // Cache locations for 15 minutes (rarely changes)
+    const cacheKey = cacheKeys.officeLocations();
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    const locations = await prisma.location.findMany({
       orderBy: { name: 'asc' },
     });
+
+    cache.set(cacheKey, locations, cacheTTL.long);
+    return locations;
   },
 
   /**
@@ -38,6 +47,11 @@ export const attendanceService = {
    * Get today's attendance status for an employee
    */
   async getTodayStatus(employeeId: string) {
+    // Cache for 30 seconds (frequently changing during check-in/out)
+    const cacheKey = cacheKeys.todayAttendance(employeeId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -55,21 +69,39 @@ export const attendanceService = {
       orderBy: {
         timestamp: 'asc',
       },
-      include: {
-        location: true,
+      select: {
+        id: true,
+        employeeId: true,
+        type: true,
+        timestamp: true,
+        latitude: true,
+        longitude: true,
+        locationId: true,
+        location: {
+          select: {
+            id: true,
+            name: true,
+            latitude: true,
+            longitude: true,
+            radiusMeters: true,
+          },
+        },
       },
     });
 
     const checkIn = attendance.find((a) => a.type === 'CHECKIN');
     const checkOut = attendance.find((a) => a.type === 'CHECKOUT');
 
-    return {
+    const result = {
       hasCheckedIn: !!checkIn,
       hasCheckedOut: !!checkOut,
       checkIn,
       checkOut,
       workingHours: this.calculateWorkingHours(checkIn?.timestamp, checkOut?.timestamp),
     };
+
+    cache.set(cacheKey, result, 30); // 30 seconds cache
+    return result;
   },
 
   /**

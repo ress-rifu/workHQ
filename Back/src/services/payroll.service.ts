@@ -1,10 +1,16 @@
 import { prisma } from '../utils/prisma';
+import { cache, cacheKeys, cacheTTL } from '../utils/cache';
 
 export const payrollService = {
   /**
    * Get employee's salary structure
    */
   async getSalaryStructure(employeeId: string) {
+    // Cache for 15 minutes (rarely changes)
+    const cacheKey = cacheKeys.salaryStructure(employeeId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     // Get employee details including salary
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
@@ -29,7 +35,7 @@ export const payrollService = {
     const deductions = employee.salary * 0.1; // 10% Deductions (PF, Tax, etc.)
     const netSalary = employee.salary - deductions;
 
-    return {
+    const result = {
       employeeId: employee.id,
       employeeCode: employee.employeeCode,
       department: employee.department,
@@ -42,18 +48,43 @@ export const payrollService = {
       netSalary,
       effectiveFrom: employee.joinDate,
     };
+
+    cache.set(cacheKey, result, cacheTTL.long);
+    return result;
   },
 
   /**
    * Get employee's payslips
    */
   async getPayslips(employeeId: string, limit: number = 12) {
+    // Cache for 5 minutes
+    const cacheKey = cacheKeys.payslips(employeeId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const payslips = await prisma.payslip.findMany({
       where: { employeeId },
+      select: {
+        id: true,
+        month: true,
+        year: true,
+        basicSalary: true,
+        hra: true,
+        allowances: true,
+        deductions: true,
+        grossSalary: true,
+        netSalary: true,
+        workingDays: true,
+        presentDays: true,
+        leaveDays: true,
+        status: true,
+        createdAt: true,
+      },
       orderBy: [{ year: 'desc' }, { month: 'desc' }],
       take: limit,
     });
 
+    cache.set(cacheKey, payslips, cacheTTL.medium);
     return payslips;
   },
 

@@ -160,6 +160,13 @@ function AttendanceScreenMobile() {
       officeLocation.longitude
     );
 
+    console.log('📍 Location Debug:');
+    console.log('  Your location:', userLoc.coords.latitude.toFixed(6), userLoc.coords.longitude.toFixed(6));
+    console.log('  Office location:', officeLocation.latitude.toFixed(6), officeLocation.longitude.toFixed(6));
+    console.log('  Distance:', Math.round(dist), 'm');
+    console.log('  Radius:', officeLocation.radiusMeters, 'm');
+    console.log('  Within range:', dist <= officeLocation.radiusMeters);
+
     setDistance(dist);
     setWithinRadius(dist <= officeLocation.radiusMeters);
   };
@@ -201,9 +208,13 @@ function AttendanceScreenMobile() {
     }
 
     if (!withinRadius) {
+      const debugInfo = __DEV__ 
+        ? `\n\nDebug Info:\nYour: ${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}\nOffice: ${officeLocation.latitude.toFixed(6)}, ${officeLocation.longitude.toFixed(6)}`
+        : '';
+      
       Alert.alert(
         'Out of Range',
-        `You are ${formatDistance(distance!)} away from the office. Please be within ${officeLocation.radiusMeters}m to check in.`
+        `You are ${formatDistance(distance!)} away from the office. Please be within ${officeLocation.radiusMeters}m to check in.${debugInfo}`
       );
       return;
     }

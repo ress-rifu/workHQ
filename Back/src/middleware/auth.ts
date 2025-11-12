@@ -49,17 +49,36 @@ export const authenticate = async (
       return;
     }
 
-    // Get user details from database
-    const dbUser = await prisma.user.findUnique({
-      where: { email: user.email! },
-      include: { employee: true }
-    });
+    // Try to get user details from database
+    let dbUser;
+    try {
+      dbUser = await prisma.user.findUnique({
+        where: { email: user.email! },
+        include: { employee: true }
+      });
+    } catch (dbError) {
+      console.warn('⚠️ Database unavailable, using Supabase user data only');
+      // Use Supabase user data as fallback
+      req.user = {
+        id: user.id,
+        email: user.email!,
+        role: (user.user_metadata?.role || 'EMPLOYEE') as string,
+        employeeId: user.id
+      };
+      next();
+      return;
+    }
 
     if (!dbUser) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist in database'
-      });
+      console.warn(`⚠️ User ${user.email} not found in database, using Supabase data`);
+      // Create mock user data from Supabase
+      req.user = {
+        id: user.id,
+        email: user.email!,
+        role: (user.user_metadata?.role || 'EMPLOYEE') as string,
+        employeeId: user.id
+      };
+      next();
       return;
     }
 

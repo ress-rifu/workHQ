@@ -78,5 +78,6 @@ Write-Host "   • Monitor build progress in terminal" -ForegroundColor Gray
 Write-Host "   • Check status at: https://expo.dev" -ForegroundColor Gray
 Write-Host "   • Once complete, you'll get a download link`n" -ForegroundColor Gray
 
-Write-Host "💡 Tip: The APK download link will be valid for 30 days`n" -ForegroundColor Yellow
+Write-Host "💡 Tip: The APK download link will be valid for 30 days" -ForegroundColor Yellow
+Write-Host "" -ForegroundColor Yellow
 

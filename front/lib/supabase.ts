@@ -2,8 +2,9 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+// Production Supabase credentials (from env.example)
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://rdkgfezrowfnlrbtiekn.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJka2dmZXpyb3dmbmxyYnRpZWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2NTIzMzcsImV4cCI6MjA2MTIyODMzN30.l-eDnZ15BScEIHfpjnTj7gJQhUUBQG5EBZXZnU0UKjU';
 
 console.log('🔧 Initializing Supabase Client...');
 console.log('📍 URL:', supabaseUrl);

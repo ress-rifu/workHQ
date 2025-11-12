@@ -45,32 +45,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		// Get initial session with timeout
 		const initAuth = async () => {
+			console.log('🔐 Initializing auth...');
 			try {
-				const {
-					data: { session },
-					error,
-				} = await Promise.race([
-					supabase.auth.getSession(),
-					new Promise<any>((_, reject) =>
-						setTimeout(() => reject(new Error("Timeout")), 5000)
-					),
-				]);
+				// Set a timeout to prevent infinite loading
+				const timeoutId = setTimeout(() => {
+					console.warn('⚠️ Auth initialization timeout - continuing without session');
+					setLoading(false);
+				}, 3000);
+
+				const { data: { session }, error } = await supabase.auth.getSession();
+
+				clearTimeout(timeoutId);
 
 				if (error) {
-					console.error("Auth error:", error);
+					console.error('❌ Auth error:', error.message);
 					setLoading(false);
 					return;
 				}
 
+				console.log('✅ Session loaded:', session ? 'Authenticated' : 'Not authenticated');
 				setSession(session);
 				setUser(session?.user ?? null);
+				
 				if (session) {
 					await fetchProfile();
 				} else {
 					setLoading(false);
 				}
-			} catch (error) {
-				console.error("Auth initialization error:", error);
+			} catch (error: any) {
+				console.error('❌ Auth initialization error:', error.message);
 				setLoading(false);
 			}
 		};
@@ -95,11 +98,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	const fetchProfile = async () => {
+		console.log('👤 Fetching profile...');
 		try {
 			const {
 				data: { session },
 			} = await supabase.auth.getSession();
 			if (!session) {
+				console.log('❌ No session available');
 				setProfile(null);
 				setLoading(false);
 				return;
@@ -107,10 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			// Check if backend API is configured
 			if (!process.env.EXPO_PUBLIC_BACKEND_API_URL) {
-				console.warn("Backend API URL not configured");
+				console.warn("⚠️ Backend API URL not configured - skipping profile");
 				setLoading(false);
 				return;
 			}
+
+			console.log('📡 Fetching profile from backend...');
 
 			const response = await fetch(
 				`${process.env.EXPO_PUBLIC_BACKEND_API_URL}/api/auth/profile`,
@@ -124,18 +131,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			if (response.ok) {
 				const data = await response.json();
+				console.log('✅ Profile loaded:', data.user?.email);
 				setProfile(data.user);
 			} else {
 				const errorText = await response.text();
-				console.error("Failed to fetch profile:", response.status, errorText);
+				console.error("❌ Failed to fetch profile:", response.status, errorText);
 
 				// Don't block auth if profile fetch fails
 				// User is still authenticated via Supabase
 			}
-		} catch (error) {
-			console.error("Error fetching profile:", error);
+		} catch (error: any) {
+			console.error("❌ Error fetching profile:", error.message);
 			// Don't block auth if profile fetch fails
 		} finally {
+			console.log('✅ Setting loading to false');
 			setLoading(false);
 		}
 	};

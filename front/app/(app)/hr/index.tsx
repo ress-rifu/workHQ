@@ -98,7 +98,7 @@ export default function HRLeaveRequestsScreen() {
   }
 
   return (
-    <Screen safe={false} padding={false} hasHeader>
+    <Screen safe padding={false} scrollable={false}>
       <AppHeader
         title="Leave Requests"
         subtitle="Manage applications"
@@ -110,6 +110,7 @@ export default function HRLeaveRequestsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
       >
         {/* Stats Cards */}
         {stats && (
@@ -280,7 +281,11 @@ export default function HRLeaveRequestsScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
+    paddingTop: 80,
     paddingBottom: Spacing.xxxl + Spacing.xxl,
   },
   statsContainer: {

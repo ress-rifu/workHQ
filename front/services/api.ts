@@ -52,9 +52,12 @@ export async function apiRequest<T = any>(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Create timeout controller (10 seconds timeout)
+    // Create timeout controller (30 seconds timeout - increased for slow connections)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    console.log(`📡 API Request: ${endpoint}`);
+    console.log(`🌐 Backend URL: ${BACKEND_URL}`);
 
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
@@ -64,6 +67,8 @@ export async function apiRequest<T = any>(
       });
 
       clearTimeout(timeoutId);
+
+      console.log(`✅ API Response [${endpoint}]: ${response.status}`);
 
       const data = await response.json();
 
@@ -75,12 +80,13 @@ export async function apiRequest<T = any>(
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       if (fetchError.name === 'AbortError') {
-        throw new Error('Request timeout - please check your connection');
+        console.error(`⏱️ Request timeout [${endpoint}] - Backend may be sleeping or unreachable`);
+        throw new Error('Request timeout - Backend server may be sleeping. Please try again in a moment.');
       }
       throw fetchError;
     }
   } catch (error: any) {
-    console.error(`API Error [${endpoint}]:`, error);
+    console.error(`❌ API Error [${endpoint}]:`, error);
     return {
       success: false,
       error: error.message || 'An error occurred',

@@ -4,7 +4,8 @@
 
 import { supabase } from '../lib/supabase';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'http://localhost:5000';
+// Use production Heroku URL by default, or env variable if set
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'https://workhq-api-c0ff13762192.herokuapp.com';
 const API_URL = `${BACKEND_URL}/api`;
 
 export interface ApiResponse<T = any> {

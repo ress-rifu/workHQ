@@ -151,15 +151,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const signIn = async (email: string, password: string) => {
 		try {
-			const { error } = await supabase.auth.signInWithPassword({
+			console.log('🔐 Starting sign in...');
+			console.log('📧 Email:', email);
+			console.log('🔑 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+			console.log('🔑 Supabase Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+			console.log('🔑 Supabase Key preview:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
+			
+			const { error, data } = await supabase.auth.signInWithPassword({
 				email,
 				password,
 			});
+
+			console.log('✅ Sign in response:', { error: error?.message, hasUser: !!data?.user });
 
 			if (error) throw error;
 
 			return { error: null };
 		} catch (error: any) {
+			console.error('❌ Sign in error:', error.message);
+			console.error('❌ Full error:', JSON.stringify(error, null, 2));
 			return { error };
 		}
 	};

@@ -144,9 +144,9 @@ export default function LeaveRequestDetailScreen() {
 
   if (!request) {
     return (
-      <Screen safe={false} padding hasHeader>
+      <Screen safe padding scrollable={false}>
         <AppHeader title="Leave Request" showBack />
-        <View style={styles.centerContent}>
+        <View style={[styles.centerContent, { marginTop: 80 }]}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.textSecondary} />
           <Text style={[styles.errorText, { color: colors.text }]}>
             Leave request not found
@@ -160,10 +160,14 @@ export default function LeaveRequestDetailScreen() {
   const isPending = request.status === 'PENDING';
 
   return (
-    <Screen safe={false} padding={false} hasHeader>
+    <Screen safe padding={false} scrollable={false}>
       <AppHeader title="Leave Request" showBack />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+      >
         {/* Status Badge */}
         <View style={styles.statusContainer}>
           <Badge label={request.status} variant={getStatusVariant(request.status)} size="lg" />
@@ -335,8 +339,12 @@ export default function LeaveRequestDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     padding: Spacing.md,
+    paddingTop: 80 + Spacing.md,
     paddingBottom: Spacing.xxxl + Spacing.xxl,
   },
   statusContainer: {

@@ -17,6 +17,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -28,21 +29,31 @@ export default function ProfileScreen() {
       setLoading(true);
       setError('');
       
-      const [profileRes, statsRes] = await Promise.all([
-        profileService.getProfile(),
-        profileService.getProfileStats(),
-      ]);
-
+      // Load profile first (critical)
+      const profileRes = await profileService.getProfile();
+      
       if (profileRes.success && profileRes.data) {
         setProfile(profileRes.data);
+        
+        // Load stats in background (non-critical)
+        // If it fails, we still show the profile
+        setStatsLoading(true);
+        profileService.getProfileStats().then(statsRes => {
+          if (statsRes.success && statsRes.data) {
+            setStats(statsRes.data);
+          } else {
+            console.warn('Failed to load profile stats:', statsRes.error);
+          }
+        }).catch(err => {
+          console.warn('Stats request error:', err);
+        }).finally(() => {
+          setStatsLoading(false);
+        });
       } else {
         setError(profileRes.error || 'Failed to load profile');
       }
-
-      if (statsRes.success && statsRes.data) {
-        setStats(statsRes.data);
-      }
     } catch (err: any) {
+      console.error('Profile load error:', err);
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -169,7 +180,16 @@ export default function ProfileScreen() {
         )}
 
         {/* Stats Cards */}
-        {stats && (
+        {statsLoading ? (
+          <View style={styles.statsGrid}>
+            <Card padding="md" shadow="sm" style={styles.statCard}>
+              <LoadingSpinner size="small" />
+              <Text style={[styles.statLabel, { color: colors.textSecondary, marginTop: Spacing.sm }]}>
+                Loading stats...
+              </Text>
+            </Card>
+          </View>
+        ) : stats ? (
           <View style={styles.statsGrid}>
             <Card padding="md" shadow="sm" style={styles.statCard}>
               <View style={[styles.statIcon, { backgroundColor: colors.successLight }]}>
@@ -207,7 +227,7 @@ export default function ProfileScreen() {
               </Text>
             </Card>
           </View>
-        )}
+        ) : null}
 
         {/* Settings Card */}
         <Card padding="lg" shadow="md" style={styles.card}>

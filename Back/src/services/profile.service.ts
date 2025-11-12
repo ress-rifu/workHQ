@@ -160,52 +160,53 @@ export const profileService = {
       return null;
     }
 
-    // Check cache first (1 minute cache for stats)
+    // Check cache first (5 minute cache for better performance)
     const cacheKey = cacheKeys.employeeStats(user.employee.id);
     const cached = cache.get(cacheKey);
     if (cached) return cached;
 
-    // Get leave balance - only fetch needed fields
-    const leaveBalances = await prisma.leaveBalance.findMany({
-      where: {
-        employeeId: user.employee.id,
-      },
-      select: {
-        id: true,
-        balanceDays: true,
-        leaveType: {
-          select: {
-            id: true,
-            name: true,
-            maxPerYear: true,
-            isPaid: true,
-          },
-        },
-      },
-    });
-
-    // Get attendance count (this month)
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const attendanceCount = await prisma.attendance.count({
-      where: {
-        employeeId: user.employee.id,
-        timestamp: {
-          gte: startOfMonth,
+    // Execute all queries in parallel for speed
+    const [leaveBalances, attendanceCount, pendingLeavesCount] = await Promise.all([
+      // Get leave balance - only fetch needed fields
+      prisma.leaveBalance.findMany({
+        where: {
+          employeeId: user.employee.id,
         },
-        type: 'CHECKIN',
-      },
-    });
-
-    // Get pending leaves count
-    const pendingLeavesCount = await prisma.leave.count({
-      where: {
-        employeeId: user.employee.id,
-        status: 'PENDING',
-      },
-    });
+        select: {
+          id: true,
+          balanceDays: true,
+          leaveType: {
+            select: {
+              id: true,
+              name: true,
+              maxPerYear: true,
+              isPaid: true,
+            },
+          },
+        },
+      }),
+      // Get attendance count (this month)
+      prisma.attendance.count({
+        where: {
+          employeeId: user.employee.id,
+          timestamp: {
+            gte: startOfMonth,
+          },
+          type: 'CHECKIN',
+        },
+      }),
+      // Get pending leaves count
+      prisma.leave.count({
+        where: {
+          employeeId: user.employee.id,
+          status: 'PENDING',
+        },
+      }),
+    ]);
 
     // Calculate total leave balance
     const totalLeaveBalance = leaveBalances.reduce(
@@ -220,8 +221,8 @@ export const profileService = {
       totalLeaveBalance,
     };
 
-    // Cache for 1 minute (frequently changing data)
-    cache.set(cacheKey, stats, cacheTTL.short);
+    // Cache for 5 minutes (better performance, data doesn't change that often)
+    cache.set(cacheKey, stats, cacheTTL.medium);
     return stats;
   },
 };

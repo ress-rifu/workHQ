@@ -75,11 +75,68 @@ function AttendanceScreenMobile() {
   }, []);
 
   const initialize = async () => {
-    await requestLocationPermission();
-    await loadOfficeLocation();
-    await loadTodayStatus();
-    await getCurrentLocation();
+    console.time('⚡ Attendance initialization');
+    
+    // Step 1: Request permission first (required)
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: Load everything in parallel for speed
+    console.time('⚡ Parallel API calls');
+    const [officeRes, statusRes, locationRes] = await Promise.all([
+      attendanceService.getPrimaryLocation().catch(err => {
+        console.error('Office location error:', err);
+        return { success: false, error: err.message };
+      }),
+      attendanceService.getTodayStatus().catch(err => {
+        console.error('Today status error:', err);
+        return { success: false, error: err.message };
+      }),
+      // Use BALANCED accuracy for faster initial load (upgrade later if needed)
+      ExpoLocation.getCurrentPositionAsync({
+        accuracy: ExpoLocation.Accuracy.Balanced,
+      }).catch(err => {
+        console.error('Location error:', err);
+        return null;
+      }),
+    ]);
+    console.timeEnd('⚡ Parallel API calls');
+
+    // Process results
+    if (officeRes.success && officeRes.data) {
+      setOfficeLocation(officeRes.data);
+      
+      // Calculate distance if we have location
+      if (locationRes) {
+        setLocation(locationRes);
+        const dist = getDistanceFromLatLonInMeters(
+          locationRes.coords.latitude,
+          locationRes.coords.longitude,
+          officeRes.data.latitude,
+          officeRes.data.longitude
+        );
+        setDistance(dist);
+        setWithinRadius(dist <= officeRes.data.radiusMeters);
+      }
+    } else {
+      setError(officeRes.error || 'No office location found');
+    }
+
+    if (statusRes.success && statusRes.data) {
+      setTodayStatus(statusRes.data);
+    }
+
+    if (locationRes) {
+      setLocation(locationRes);
+    } else {
+      setError('Failed to get location');
+    }
+
     setLoading(false);
+    console.timeEnd('⚡ Attendance initialization');
   };
 
   const requestLocationPermission = async () => {

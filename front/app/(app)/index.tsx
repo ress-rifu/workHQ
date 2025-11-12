@@ -33,16 +33,17 @@ export default function HomeScreen() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      console.time('⚡ Dashboard load');
 
       const promises = [
-        attendanceService.getTodayStatus(),
-        leaveService.getLeaveBalances(),
-        profileService.getProfileStats(),
+        attendanceService.getTodayStatus().catch(e => ({ success: false, error: e.message })),
+        leaveService.getLeaveBalances().catch(e => ({ success: false, error: e.message })),
+        profileService.getProfileStats().catch(e => ({ success: false, error: e.message })),
       ];
 
       // Add HR stats if user is HR or Admin
       if (isHROrAdmin) {
-        promises.push(hrService.getHRStats());
+        promises.push(hrService.getHRStats().catch(e => ({ success: false, error: e.message })));
       }
 
       const results = await Promise.all(promises);
@@ -63,6 +64,8 @@ export default function HomeScreen() {
       if (hrStatsRes && hrStatsRes.success && hrStatsRes.data) {
         setHRStats(hrStatsRes.data);
       }
+
+      console.timeEnd('⚡ Dashboard load');
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {

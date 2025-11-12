@@ -188,6 +188,9 @@ export const attendanceService = {
       },
     });
 
+    // Invalidate cache immediately after check-in
+    cache.delete(cacheKeys.todayAttendance(employeeId));
+
     return attendance;
   },
 
@@ -221,6 +224,9 @@ export const attendanceService = {
         location: true,
       },
     });
+
+    // Invalidate cache immediately after check-out
+    cache.delete(cacheKeys.todayAttendance(employeeId));
 
     return attendance;
   },

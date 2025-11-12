@@ -119,13 +119,20 @@ function AttendanceScreenMobile() {
 
   const loadTodayStatus = async () => {
     try {
+      console.log('🔄 Loading today status...');
       const response = await attendanceService.getTodayStatus();
       
       if (response.success && response.data) {
+        console.log('✅ Today status loaded:', {
+          hasCheckedIn: response.data.hasCheckedIn,
+          hasCheckedOut: response.data.hasCheckedOut,
+          checkInTime: response.data.checkIn?.timestamp,
+          checkOutTime: response.data.checkOut?.timestamp,
+        });
         setTodayStatus(response.data);
       }
     } catch (err: any) {
-      console.error('Failed to load today status:', err);
+      console.error('❌ Failed to load today status:', err);
     }
   };
 
@@ -221,6 +228,7 @@ function AttendanceScreenMobile() {
 
     try {
       setChecking(true);
+      console.log('⏰ Attempting check-in...');
       
       const response = await attendanceService.checkIn({
         latitude: location.coords.latitude,
@@ -229,12 +237,19 @@ function AttendanceScreenMobile() {
       });
 
       if (response.success) {
+        console.log('✅ Check-in successful!', response.data);
         Alert.alert('Success', 'Checked in successfully!');
+        
+        // Reload today's status to update UI
         await loadTodayStatus();
+        
+        console.log('🔄 UI should now show check-in time');
       } else {
+        console.error('❌ Check-in failed:', response.error);
         Alert.alert('Error', response.error || 'Failed to check in');
       }
     } catch (err: any) {
+      console.error('❌ Check-in error:', err);
       Alert.alert('Error', err.message || 'An error occurred');
     } finally {
       setChecking(false);
@@ -249,6 +264,7 @@ function AttendanceScreenMobile() {
 
     try {
       setChecking(true);
+      console.log('⏰ Attempting check-out...');
       
       const response = await attendanceService.checkOut({
         latitude: location.coords.latitude,
@@ -256,12 +272,19 @@ function AttendanceScreenMobile() {
       });
 
       if (response.success) {
+        console.log('✅ Check-out successful!', response.data);
         Alert.alert('Success', 'Checked out successfully!');
+        
+        // Reload today's status to update UI
         await loadTodayStatus();
+        
+        console.log('🔄 UI should now show check-out time');
       } else {
+        console.error('❌ Check-out failed:', response.error);
         Alert.alert('Error', response.error || 'Failed to check out');
       }
     } catch (err: any) {
+      console.error('❌ Check-out error:', err);
       Alert.alert('Error', err.message || 'An error occurred');
     } finally {
       setChecking(false);

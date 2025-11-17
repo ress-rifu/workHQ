@@ -13,7 +13,8 @@ if (-Not (Test-Path ".env")) {
     Write-Host ""
     Write-Host "EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co" -ForegroundColor White
     Write-Host "EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here" -ForegroundColor White
-    Write-Host "EXPO_PUBLIC_BACKEND_API_URL=http://192.168.0.185:3000" -ForegroundColor White
+    Write-Host "EXPO_PUBLIC_BACKEND_API_URL=https://workhq-api.vercel.app" -ForegroundColor White
+    Write-Host "# For local development: http://localhost:5000" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Get your Supabase credentials from:" -ForegroundColor Yellow
     Write-Host "https://supabase.com/dashboard → Your Project → Settings → API" -ForegroundColor Cyan

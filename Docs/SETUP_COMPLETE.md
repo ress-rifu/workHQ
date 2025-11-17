@@ -128,7 +128,8 @@ WorkHQ/
 ```
 EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-EXPO_PUBLIC_BACKEND_API_URL=http://localhost:5000
+EXPO_PUBLIC_BACKEND_API_URL=https://workhq-api.vercel.app
+# For local development: http://localhost:5000
 ```
 
 #### Backend (.env)

@@ -30,7 +30,9 @@ EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Backend API Configuration (REQUIRED)
-EXPO_PUBLIC_BACKEND_API_URL=http://192.168.0.185:3000
+EXPO_PUBLIC_BACKEND_API_URL=https://workhq-api.vercel.app
+# For local development: http://localhost:5000
+# For same WiFi testing: http://192.168.0.185:5000
 ```
 
 **Where to get Supabase credentials:**
@@ -42,7 +44,9 @@ EXPO_PUBLIC_BACKEND_API_URL=http://192.168.0.185:3000
    - anon/public key → `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 
 **Backend URL:**
-- If backend running locally: `http://192.168.0.185:3000` (replace with your IP)
+- Production backend (default): `https://workhq-api.vercel.app`
+- If backend running locally: `http://localhost:5000`
+- If testing on phone with local backend: `http://YOUR_IP:5000` (replace YOUR_IP)
 - Find your IP: `ipconfig` (Windows) → Look for IPv4 Address
 
 ---
@@ -101,9 +105,9 @@ npx expo start --clear
 
 **If QR scanning doesn't work:**
 1. Look at the terminal output
-2. Find the line: `Metro waiting on exp://192.168.x.x:8081`
+2. Find the line: `Metro waiting on exp://YOUR_IP:8081`
 3. Open Expo Go → "Enter URL manually"
-4. Type the full URL (e.g., `exp://192.168.0.185:8081`)
+4. Type the full URL from terminal (e.g., `exp://192.168.x.x:8081`)
 
 ### Option B: Tunnel Mode (If same network doesn't work)
 
@@ -177,7 +181,7 @@ ipconfig
 
 **Test Connection:**
 - Open phone browser
-- Go to: `http://192.168.0.185:8081` (your IP)
+- Go to: `http://localhost:8081` or check terminal for Metro URL
 - Should see Metro bundler page
 - If not loading → Network issue
 
@@ -256,7 +260,7 @@ npx expo start --ios
 
 **In Metro Terminal:**
 ```
-✅ Metro waiting on exp://192.168.0.185:8081
+✅ Metro waiting on exp://YOUR_IP:8081
 ✅ Logs for your project will appear below.
 ```
 
@@ -274,7 +278,7 @@ npx expo start --ios
 📱 Expo Public Config: {
   supabaseUrl: '✅ Set',
   supabaseKey: '✅ Set',
-  backendUrl: 'http://192.168.0.185:3000'
+  backendUrl: 'https://workhq-api.vercel.app'
 }
 ✅ Fonts loaded: true
 ```
@@ -327,7 +331,7 @@ node -v  # Should be 18.x or 20.x
 npm -v   # Should be 9.x or 10.x
 
 # Check if backend is running
-curl http://192.168.0.185:3000/api/health
+curl https://workhq-api.vercel.app/health
 ```
 
 **Stop Everything:**
@@ -364,7 +368,7 @@ Get-Process node | Stop-Process -Force
    - Copy any red error messages from terminal
 
 6. **Connection test:**
-   - Can you open `http://192.168.0.185:8081` in phone browser?
+   - Can you open Metro URL (shown in terminal) in phone browser?
 
 ---
 

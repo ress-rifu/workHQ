@@ -90,7 +90,7 @@
 - ✅ Payslip generation (attendance-based)
 - ✅ Payslip history
 - ✅ Yearly statistics
-- ✅ Currency formatting (₹)
+- ✅ Currency formatting (৳ BDT)
 
 ### Phase 8: Dashboard & Navigation ✅
 - ✅ Main dashboard with quick actions
@@ -344,7 +344,8 @@ PORT=5000
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-EXPO_PUBLIC_BACKEND_API_URL=http://localhost:5000/api
+EXPO_PUBLIC_BACKEND_API_URL=https://workhq-api.vercel.app
+# For local development: http://localhost:5000
 ```
 
 ---

@@ -80,12 +80,12 @@ export const payrollService = {
   },
 
   /**
-   * Format currency
+   * Format currency (Bangladesh Taka)
    */
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-BD', {
       style: 'currency',
-      currency: 'INR',
+      currency: 'BDT',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);

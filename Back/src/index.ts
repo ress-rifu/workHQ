@@ -17,7 +17,7 @@ dotenv.config();
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
 
-// Trust proxy (required for Heroku)
+// Trust proxy (required for Vercel/cloud hosting)
 app.set('trust proxy', 1);
 
 // Middleware
@@ -83,32 +83,37 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📍 API Routes:`);
-  console.log(`   - GET  /health`);
-  console.log(`   - POST /api/auth/register`);
-  console.log(`   - GET  /api/auth/profile`);
-  console.log(`   - GET  /api/profile`);
-  console.log(`   - GET  /api/profile/stats`);
-  console.log(`   - PUT  /api/profile`);
-  console.log(`   - GET  /api/leave/types`);
-  console.log(`   - GET  /api/leave/balances`);
-  console.log(`   - GET  /api/leave/applications`);
-  console.log(`   - POST /api/leave/apply`);
-  console.log(`   - GET  /api/attendance/locations`);
-  console.log(`   - GET  /api/attendance/today`);
-  console.log(`   - POST /api/attendance/check-in`);
-  console.log(`   - POST /api/attendance/check-out`);
-  console.log(`   - GET  /api/payroll/salary`);
-  console.log(`   - GET  /api/payroll/payslips`);
-  console.log(`   - GET  /api/payroll/payslips/:id`);
-  console.log(`   - GET  /api/hr/leave-requests (HR/ADMIN)`);
-  console.log(`   - PUT  /api/hr/leave-requests/:id/approve (HR/ADMIN)`);
-  console.log(`   - GET  /api/hr/employees (HR/ADMIN)`);
-});
+// Start server (only for local development, not for serverless)
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📍 API Routes:`);
+    console.log(`   - GET  /health`);
+    console.log(`   - POST /api/auth/register`);
+    console.log(`   - GET  /api/auth/profile`);
+    console.log(`   - GET  /api/profile`);
+    console.log(`   - GET  /api/profile/stats`);
+    console.log(`   - PUT  /api/profile`);
+    console.log(`   - GET  /api/leave/types`);
+    console.log(`   - GET  /api/leave/balances`);
+    console.log(`   - GET  /api/leave/applications`);
+    console.log(`   - POST /api/leave/apply`);
+    console.log(`   - GET  /api/attendance/locations`);
+    console.log(`   - GET  /api/attendance/today`);
+    console.log(`   - POST /api/attendance/check-in`);
+    console.log(`   - POST /api/attendance/check-out`);
+    console.log(`   - GET  /api/payroll/salary`);
+    console.log(`   - GET  /api/payroll/payslips`);
+    console.log(`   - GET  /api/payroll/payslips/:id`);
+    console.log(`   - GET  /api/hr/leave-requests (HR/ADMIN)`);
+    console.log(`   - PUT  /api/hr/leave-requests/:id/approve (HR/ADMIN)`);
+    console.log(`   - GET  /api/hr/employees (HR/ADMIN)`);
+  });
+} else {
+  console.log('🚀 Running in serverless mode (Vercel)');
+}
 
+// Export for serverless (Vercel) and testing
 export default app;
 

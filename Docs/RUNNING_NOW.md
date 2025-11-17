@@ -7,7 +7,8 @@ Both servers have been started fresh in separate windows:
 ### **Backend Server** ✅
 - **Window:** "=== BACKEND SERVER ==="
 - **Port:** 5000
-- **URL:** http://192.168.0.185:5000
+- **Local URL:** http://192.168.0.185:5000
+- **Production URL:** https://workhq-api.vercel.app
 - **Status Check:** http://192.168.0.185:5000/health
 
 ### **Frontend Server** ✅  

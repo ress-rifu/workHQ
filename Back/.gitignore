@@ -34,3 +34,6 @@ logs/
 
 # Prisma
 prisma/migrations/
+
+.vercel
+.env*.local

@@ -25,7 +25,40 @@
 
 ## Backend Deployment
 
-### Option 1: Railway (Recommended)
+### Option 1: Vercel (Recommended - Currently Deployed)
+
+1. **Install Vercel CLI**
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Login to Vercel**
+   ```bash
+   vercel login
+   ```
+
+3. **Deploy from Backend directory**
+   ```bash
+   cd Back
+   npm run build
+   vercel --prod --yes
+   ```
+
+4. **Set environment variables in Vercel Dashboard**
+   - Go to your project settings
+   - Add the following environment variables:
+     - `DATABASE_URL`
+     - `SUPABASE_URL`
+     - `SUPABASE_SERVICE_ROLE_KEY`
+     - `SUPABASE_ANON_KEY`
+     - `JWT_SECRET`
+     - `NODE_ENV=production`
+
+5. **Deployment URL**
+   - Your API will be available at: `https://your-project.vercel.app`
+   - Current deployment: `https://workhq-api.vercel.app`
+
+### Option 2: Railway
 
 1. **Sign up at Railway.app**
    ```bash
@@ -60,7 +93,7 @@
    railway domain
    ```
 
-### Option 2: Render
+### Option 3: Render
 
 1. **Create account at Render.com**
 
@@ -72,31 +105,6 @@
 3. **Add environment variables** (same as above)
 
 4. **Deploy** - Render will automatically deploy
-
-### Option 3: Heroku
-
-1. **Install Heroku CLI**
-   ```bash
-   npm install -g heroku
-   heroku login
-   ```
-
-2. **Create Heroku app**
-   ```bash
-   cd Back
-   heroku create workhq-api
-   ```
-
-3. **Set environment variables**
-   ```bash
-   heroku config:set DATABASE_URL="your_url"
-   # ... set all other variables
-   ```
-
-4. **Deploy**
-   ```bash
-   git push heroku main
-   ```
 
 ---
 
@@ -228,7 +236,7 @@ NODE_ENV=production
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-EXPO_PUBLIC_BACKEND_API_URL=https://your-api.railway.app/api
+EXPO_PUBLIC_BACKEND_API_URL=https://workhq-api.vercel.app
 ```
 
 ---

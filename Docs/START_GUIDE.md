@@ -2,7 +2,8 @@
 
 ## ✅ Current Status
 
-**Backend:** ✅ RUNNING on http://localhost:5000  
+**Backend (Local):** ✅ RUNNING on http://localhost:5000  
+**Backend (Production):** ✅ DEPLOYED on https://workhq-api.vercel.app  
 **Frontend:** ✅ RUNNING (Expo Dev Server)
 
 ---

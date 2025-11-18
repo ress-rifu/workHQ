@@ -93,20 +93,7 @@ export default function AppLayout() {
           headerShown: false,
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textTertiary,
-          tabBarStyle: isHROrAdmin ? { display: 'none' } : {
-            position: 'absolute',
-            backgroundColor: colors.card,
-            borderTopWidth: 0,
-            height: Layout.tabBarHeight + insets.bottom,
-            paddingBottom: insets.bottom + spacing.xs,
-            paddingTop: spacing.sm,
-            paddingHorizontal: spacing.md,
-            marginHorizontal: spacing.lg,
-            marginBottom: insets.bottom + spacing.md,
-            borderRadius: radius.full,
-            borderWidth: StyleSheet.hairlineWidth * 2,
-            borderColor: colors.borderLight,
-          },
+          tabBarStyle: { display: 'none' }, // Hide tab bar for all users
           tabBarLabelStyle: {
             fontSize: 11,
             fontWeight: '700',

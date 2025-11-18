@@ -101,14 +101,12 @@ export default function ProfileScreen() {
       {/* Fixed Header */}
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <SidebarToggle />
-            <View>
-              <Text style={[styles.greeting, { color: colors.textSecondary }]}>Your Profile</Text>
-              <Text style={[styles.userName, { color: colors.text }]}>
-                {profile?.fullName || authUser?.email?.split('@')[0] || 'Profile'}
-              </Text>
-            </View>
+          <SidebarToggle />
+          <View style={styles.headerCenter}>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Your Profile</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {profile?.fullName || authUser?.email?.split('@')[0] || 'Profile'}
+            </Text>
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity 
@@ -333,8 +331,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
   },
-  headerLeft: {
+  headerCenter: {
     flex: 1,
     gap: 2,
   },

@@ -21,18 +21,20 @@ export default function CreateAnnouncementScreen() {
   const [priority, setPriority] = useState<Priority>('NORMAL');
   const [loading, setLoading] = useState(false);
 
-  const unauthorized = Boolean(
-    profile && profile.role !== 'HR' && profile.role !== 'ADMIN'
-  );
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   // Only HR or ADMIN can access this screen
   useEffect(() => {
-    if (unauthorized) {
-      router.replace('/' as any);
+    if (profile && !isHROrAdmin) {
+      Alert.alert(
+        'Access Denied',
+        'Only HR and Admin users can create announcements.',
+        [{ text: 'OK', onPress: () => router.replace('/') }]
+      );
     }
-  }, [unauthorized, router]);
+  }, [profile, isHROrAdmin, router]);
 
-  if (unauthorized) {
+  if (profile && !isHROrAdmin) {
     return null;
   }
 
@@ -73,8 +75,6 @@ export default function CreateAnnouncementScreen() {
       setLoading(false);
     }
   };
-
-  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   if (loading) {
     return <LoadingSpinner />;

@@ -35,115 +35,59 @@ export default function AppLayout() {
     }
   };
 
-  // Role-specific sidebar items
-  const getSidebarItems = (): SidebarItem[] => {
-    const baseItems: SidebarItem[] = [
-      {
-        id: 'home',
-        label: 'Home',
-        icon: 'home',
-        path: '/',
-      },
-      {
-        id: 'attendance',
-        label: 'Attendance',
-        icon: 'location',
-        path: '/attendance',
-      },
-      {
-        id: 'leave',
-        label: 'Leave',
-        icon: 'calendar',
-        path: '/leave',
-      },
-      {
-        id: 'payroll',
-        label: 'Payroll',
-        icon: 'cash',
-        path: '/payroll',
-      },
-    ];
-
-    if (isAdmin) {
-      // Admin gets all items including HR and Admin panels
-      return [
-        ...baseItems,
-        {
-          id: 'hr',
-          label: 'HR Management',
-          icon: 'briefcase' as const,
-          path: '/hr',
-          badge: pendingLeaves,
-        },
-        {
-          id: 'admin',
-          label: 'Admin Panel',
-          icon: 'shield-checkmark' as const,
-          path: '/admin',
-        },
-        {
-          id: 'profile',
-          label: 'Profile',
-          icon: 'person',
-          path: '/profile',
-        },
-      ];
-    } else if (profile?.role === 'HR') {
-      // HR gets base items + HR Management
-      return [
-        ...baseItems,
-        {
-          id: 'hr',
-          label: 'HR Management',
-          icon: 'briefcase' as const,
-          path: '/hr',
-          badge: pendingLeaves,
-        },
-        {
-          id: 'profile',
-          label: 'Profile',
-          icon: 'person',
-          path: '/profile',
-        },
-      ];
-    } else {
-      // Employee gets only base items
-      return [
-        ...baseItems,
-        {
-          id: 'profile',
-          label: 'Profile',
-          icon: 'person',
-          path: '/profile',
-        },
-      ];
-    }
-  };
-
-  const sidebarItems = getSidebarItems();
-
-  // Get sidebar title and subtitle based on role
-  const getSidebarTitle = () => {
-    if (isAdmin) return "Admin";
-    if (profile?.role === 'HR') return "HR";
-    return "WorkHQ";
-  };
-
-  const getSidebarSubtitle = () => {
-    if (isAdmin) return "Control Panel";
-    if (profile?.role === 'HR') return "Management";
-    return "Navigation";
-  };
+  const sidebarItems: SidebarItem[] = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: 'home',
+      path: '/',
+    },
+    {
+      id: 'attendance',
+      label: 'Attendance',
+      icon: 'location',
+      path: '/attendance',
+    },
+    {
+      id: 'leave',
+      label: 'Leave',
+      icon: 'calendar',
+      path: '/leave',
+    },
+    {
+      id: 'payroll',
+      label: 'Payroll',
+      icon: 'cash',
+      path: '/payroll',
+    },
+    ...(isHROrAdmin ? [{
+      id: 'hr',
+      label: 'HR Management',
+      icon: 'briefcase' as const,
+      path: '/hr',
+      badge: pendingLeaves,
+    }] : []),
+    ...(isAdmin ? [{
+      id: 'admin',
+      label: 'Admin Panel',
+      icon: 'shield-checkmark' as const,
+      path: '/admin',
+    }] : []),
+    {
+      id: 'profile',
+      label: 'Profile',
+      icon: 'person',
+      path: '/profile',
+    },
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {isHROrAdmin && (
-        <Sidebar
-          title={getSidebarTitle()}
-          subtitle={getSidebarSubtitle()}
-          items={sidebarItems}
-        />
-      )}
+      <Sidebar
+        title={isAdmin ? "Admin" : isHROrAdmin ? "HR" : "WorkHQ"}
+        subtitle={isAdmin ? "Control Panel" : isHROrAdmin ? "Management" : "Employee Portal"}
+        items={sidebarItems}
+      />
       <Tabs
         screenOptions={{
           headerShown: false,

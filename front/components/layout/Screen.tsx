@@ -38,11 +38,8 @@ export function Screen({
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
 
-  // Check if tab bar should be visible (hidden for HR/Admin users)
-  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
-  
-  // Add bottom padding to account for absolute-positioned tab bar (only if tab bar is visible)
-  const tabBarSpacing = isHROrAdmin ? 0 : Layout.tabBarHeight + insets.bottom + spacing.md + spacing.xl;
+  // Tab bar is now hidden for all users (they all use sidebar)
+  const tabBarSpacing = 0;
   
   // Add top padding if there's a fixed header (AppHeader is ~80px with safe area)
   const headerSpacing = hasHeader ? Layout.headerHeight + insets.top + spacing.md : 0;
@@ -98,7 +95,7 @@ export function Screen({
   );
 
   return (
-    <Wrapper style={screenStyle} edges={isHROrAdmin ? ['top', 'left', 'right', 'bottom'] : ['top', 'left', 'right']}>
+    <Wrapper style={screenStyle} edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}

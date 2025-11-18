@@ -128,7 +128,7 @@ export default function LeaveScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {isHROrAdmin && <SidebarToggle />}
+            <SidebarToggle />
             <View>
               <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Manage time off</Text>

@@ -139,16 +139,7 @@ export default function ApplyLeaveScreen() {
         <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
-              {isHROrAdmin ? (
-                <SidebarToggle />
-              ) : (
-                <TouchableOpacity
-                  onPress={() => router.back()}
-                  style={[styles.iconButton, { borderColor: colors.border }]}
-                >
-                  <Ionicons name="arrow-back" size={20} color={colors.text} />
-                </TouchableOpacity>
-              )}
+              <SidebarToggle />
               <View>
                 <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>Apply for Leave</Text>
@@ -171,16 +162,7 @@ export default function ApplyLeaveScreen() {
         <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
-              {isHROrAdmin ? (
-                <SidebarToggle />
-              ) : (
-                <TouchableOpacity
-                  onPress={() => router.back()}
-                  style={[styles.iconButton, { borderColor: colors.border }]}
-                >
-                  <Ionicons name="arrow-back" size={20} color={colors.text} />
-                </TouchableOpacity>
-              )}
+              <SidebarToggle />
               <View>
                 <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>Apply for Leave</Text>
@@ -206,16 +188,7 @@ export default function ApplyLeaveScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {isHROrAdmin ? (
-              <SidebarToggle />
-            ) : (
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={[styles.iconButton, { borderColor: colors.border }]}
-              >
-                <Ionicons name="arrow-back" size={20} color={colors.text} />
-              </TouchableOpacity>
-            )}
+            <SidebarToggle />
             <View>
               <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Apply for Leave</Text>

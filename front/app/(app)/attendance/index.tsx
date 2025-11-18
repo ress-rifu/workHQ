@@ -395,7 +395,7 @@ function AttendanceScreenMobile() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {isHROrAdmin && <SidebarToggle />}
+            <SidebarToggle />
             <View>
               <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Attendance</Text>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Check In & Out</Text>

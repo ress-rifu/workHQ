@@ -97,25 +97,64 @@ export default function ProfileScreen() {
   }
 
   return (
-    <Screen scrollable safe padding={false}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
+    <Screen safe padding={false}>
+      {/* Fixed Header */}
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
-          <Avatar name={profile.fullName} uri={profile.avatarUrl} size="xl" />
-          <Text style={styles.headerName}>{profile.fullName}</Text>
-          <Text style={styles.headerEmail}>{profile.email}</Text>
-          {profile.employee && (
-            <View style={styles.headerBadge}>
-              <Badge 
-                label={profile.role} 
-                variant={profile.role === 'ADMIN' ? 'error' : profile.role === 'HR' ? 'warning' : 'default'} 
+          <View style={styles.headerLeft}>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Your Profile</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {profile?.fullName || authUser?.email?.split('@')[0] || 'Profile'}
+            </Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={[styles.iconButton, { backgroundColor: colors.primaryLight }]}
+              onPress={() => router.push('/profile/edit' as any)}
+            >
+              <Ionicons name="create-outline" size={22} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.iconButton, { backgroundColor: isDark ? colors.surfaceVariant : colors.background }]}
+              onPress={toggleTheme}
+            >
+              <Ionicons 
+                name={isDark ? 'sunny' : 'moon'} 
+                size={22} 
+                color={colors.text} 
               />
-            </View>
-          )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Profile Hero */}
+        <View style={[styles.heroCard, { backgroundColor: colors.surface }]}>
+          <Avatar name={profile.fullName} uri={profile.avatarUrl} size="xl" />
+          <Text style={[styles.heroName, { color: colors.text }]}>{profile.fullName}</Text>
+          <Text style={[styles.heroEmail, { color: colors.textSecondary }]}>{profile.email}</Text>
+          {profile.employee && (
+            <View style={[styles.roleBadge, { 
+              backgroundColor: profile.role === 'ADMIN' ? colors.errorLight : 
+                              profile.role === 'HR' ? colors.warningLight : 
+                              colors.primaryLight 
+            }]}>
+              <Text style={[styles.roleText, { 
+                color: profile.role === 'ADMIN' ? colors.error : 
+                       profile.role === 'HR' ? colors.warning : 
+                       colors.primary 
+              }]}>
+                {profile.role}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.content}>
         {/* Employee Info Card */}
         {profile.employee && (
           <Card padding="lg" shadow="md" style={styles.card}>
@@ -273,46 +312,101 @@ export default function ProfileScreen() {
           icon={<Ionicons name="log-out-outline" size={20} color="#FFFFFF" />}
           style={styles.logoutButton}
         />
-      </View>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingTop: Spacing['3xl'],
-    paddingBottom: Spacing.xl,
-    alignItems: 'center',
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerName: {
-    fontSize: Typography.fontSize['2xl'],
-    fontFamily: Typography.fontFamily.bold,
-    color: '#FFFFFF',
-    marginTop: Spacing.md,
+  headerLeft: {
+    flex: 1,
+    gap: 2,
   },
-  headerEmail: {
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  greeting: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.regular,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginTop: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    opacity: 0.6,
   },
-  headerBadge: {
-    marginTop: Spacing.md,
+  userName: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.8,
+    lineHeight: 36,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: {
+    paddingTop: 16,
+  },
+  heroCard: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 24,
+    gap: 8,
+  },
+  heroName: {
+    fontSize: Typography.fontSize['2xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.4,
+  },
+  heroEmail: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    opacity: 0.7,
+  },
+  roleBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginTop: 8,
+    alignSelf: 'center',
+  },
+  roleText: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   content: {
-    padding: Spacing.md,
+    paddingHorizontal: 20,
   },
   card: {
-    marginBottom: Spacing.md,
+    marginBottom: 24,
+    borderRadius: 16,
   },
   cardTitle: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.md,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
   infoRow: {
     flexDirection: 'row',
@@ -335,63 +429,66 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
+    gap: 16,
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
     minWidth: '30%',
     alignItems: 'center',
+    paddingVertical: 20,
+    borderRadius: 16,
   },
   statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
   statValue: {
-    fontSize: Typography.fontSize['2xl'],
+    fontSize: Typography.fontSize['3xl'],
     fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.5,
   },
   statLabel: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
     textAlign: 'center',
-    marginTop: Spacing.xs,
+    marginTop: 4,
   },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.xs,
+    paddingVertical: 16,
   },
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 16,
   },
   settingLabel: {
     fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
   },
   logoutButton: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
+    marginTop: 24,
+    marginBottom: 40,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: 32,
+    gap: 16,
   },
   errorText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.medium,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
     textAlign: 'center',
+    lineHeight: 28,
   },
   retryButton: {
     minWidth: 120,

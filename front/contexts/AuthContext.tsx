@@ -47,13 +47,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const initAuth = async () => {
 			console.log('🔐 Initializing auth...');
 			try {
-				// Set a timeout to prevent infinite loading
+        // Set a timeout to prevent infinite loading
 				const timeoutId = setTimeout(() => {
 					console.warn('⚠️ Auth initialization timeout - continuing without session');
 					setLoading(false);
-				}, 3000);
-
-				const { data: { session }, error } = await supabase.auth.getSession();
+				}, 1500);				const { data: { session }, error } = await supabase.auth.getSession();
 
 				clearTimeout(timeoutId);
 
@@ -98,13 +96,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	const fetchProfile = async () => {
-		console.log('👤 Fetching profile...');
+		if (__DEV__) console.log('👤 Fetching profile...');
 		try {
 			const {
 				data: { session },
 			} = await supabase.auth.getSession();
 			if (!session) {
-				console.log('❌ No session available');
+				if (__DEV__) console.log('❌ No session available');
 				setProfile(null);
 				setLoading(false);
 				return;
@@ -112,12 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			// Check if backend API is configured
 			if (!process.env.EXPO_PUBLIC_BACKEND_API_URL) {
-				console.warn("⚠️ Backend API URL not configured - skipping profile");
+				if (__DEV__) console.warn("⚠️ Backend API URL not configured - skipping profile");
 				setLoading(false);
 				return;
 			}
 
-			console.log('📡 Fetching profile from backend...');
+			if (__DEV__) console.log('📡 Fetching profile from backend...');
 
 			const response = await fetch(
 				`${process.env.EXPO_PUBLIC_BACKEND_API_URL}/api/auth/profile`,
@@ -131,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			if (response.ok) {
 				const data = await response.json();
-				console.log('✅ Profile loaded:', data.user?.email);
+				if (__DEV__) console.log('✅ Profile loaded:', data.user?.email);
 				setProfile(data.user);
 			} else {
 				const errorText = await response.text();
@@ -144,25 +142,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			console.error("❌ Error fetching profile:", error.message);
 			// Don't block auth if profile fetch fails
 		} finally {
-			console.log('✅ Setting loading to false');
+			if (__DEV__) console.log('✅ Setting loading to false');
 			setLoading(false);
 		}
 	};
 
 	const signIn = async (email: string, password: string) => {
 		try {
-			console.log('🔐 Starting sign in...');
-			console.log('📧 Email:', email);
-			console.log('🔑 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
-			console.log('🔑 Supabase Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
-			console.log('🔑 Supabase Key preview:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
+			if (__DEV__) {
+				console.log('🔐 Starting sign in...');
+				console.log('📧 Email:', email);
+				console.log('🔑 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+				console.log('🔑 Supabase Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+				console.log('🔑 Supabase Key preview:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
+			}
 			
 			const { error, data } = await supabase.auth.signInWithPassword({
 				email,
 				password,
 			});
 
-			console.log('✅ Sign in response:', { error: error?.message, hasUser: !!data?.user });
+			if (__DEV__) console.log('✅ Sign in response:', { error: error?.message, hasUser: !!data?.user });
 
 			if (error) throw error;
 

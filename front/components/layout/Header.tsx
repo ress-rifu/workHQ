@@ -130,11 +130,8 @@ export function Header({
 const styles = StyleSheet.create({
   container: {
     paddingBottom: spacing.md,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'transparent',
   },
   content: {
     flexDirection: 'row',

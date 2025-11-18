@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -12,6 +12,7 @@ export default function AppLayout() {
   const insets = useSafeAreaInsets();
   
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
+  const isAdmin = profile?.role === 'ADMIN';
 
   return (
     <Tabs
@@ -21,7 +22,7 @@ export default function AppLayout() {
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
           position: 'absolute',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.card,
           borderTopWidth: 0,
           height: Layout.tabBarHeight + insets.bottom,
           paddingBottom: insets.bottom + spacing.xs,
@@ -30,11 +31,8 @@ export default function AppLayout() {
           marginHorizontal: spacing.lg,
           marginBottom: insets.bottom + spacing.md,
           borderRadius: radius.full,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 8,
+          borderWidth: StyleSheet.hairlineWidth * 2,
+          borderColor: colors.borderLight,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -57,6 +55,12 @@ export default function AppLayout() {
       />
       <Tabs.Screen
         name="dashboard"
+        options={{
+          href: null, // Hide from tabs
+        }}
+      />
+      <Tabs.Screen
+        name="announcements"
         options={{
           href: null, // Hide from tabs
         }}
@@ -96,6 +100,16 @@ export default function AppLayout() {
             <Ionicons name="briefcase" size={size} color={color} />
           ),
           href: isHROrAdmin ? '/hr' : null,
+        }}
+      />
+      <Tabs.Screen
+        name="admin/index"
+        options={{
+          title: 'Admin',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shield-checkmark" size={size} color={color} />
+          ),
+          href: isAdmin ? '/admin' : null,
         }}
       />
       <Tabs.Screen

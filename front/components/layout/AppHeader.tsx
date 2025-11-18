@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Typography, spacing } from '../../constants/theme';
+import { Layout, Typography, spacing, radius } from '../../constants/theme';
 
 interface AppHeaderProps {
   title: string;
@@ -22,17 +22,26 @@ export function AppHeader({
   showBack = false,
   rightAction,
 }: AppHeaderProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const headerHeight = 60 + insets.top;
+  const headerHeight = Layout.headerHeight + insets.top;
 
   return (
-    <View style={[styles.headerContainer, { height: headerHeight }]}>
+    <View
+      style={[
+        styles.headerContainer,
+        {
+          height: headerHeight,
+          backgroundColor: colors.background,
+          borderBottomColor: colors.borderLight,
+        },
+      ]}
+    >
       <StatusBar
-        barStyle="light-content"
-        backgroundColor={colors.primary}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
         translucent
       />
       <View
@@ -40,44 +49,63 @@ export function AppHeader({
           styles.headerInner,
           {
             paddingTop: insets.top,
-            backgroundColor: colors.primary,
+            backgroundColor: colors.background,
           },
         ]}
       >
+        <View
+          style={[
+            styles.headerBackdrop,
+            {
+              backgroundColor: colors.primaryLight,
+              opacity: isDark ? 0.2 : 0.35,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.headerAccent,
+            { backgroundColor: colors.primary },
+          ]}
+        />
         <View style={styles.headerContent}>
           {showBack ? (
             <TouchableOpacity
               onPress={() => router.back()}
-              style={styles.actionButton}
+              style={[styles.iconButton, { borderColor: colors.border }]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={colors.text}
+              />
             </TouchableOpacity>
           ) : (
-            <View style={styles.actionButton} />
+            <View style={styles.iconPlaceholder} />
           )}
 
           <View style={styles.titleContainer}>
-            <Text style={styles.title} numberOfLines={1}>
-              {title}
-            </Text>
-            {subtitle && (
-              <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle ? (
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>
                 {subtitle}
               </Text>
-            )}
+            ) : null}
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+              {title}
+            </Text>
           </View>
 
           {rightAction ? (
             <TouchableOpacity
               onPress={rightAction.onPress}
-              style={styles.actionButton}
+              style={[styles.iconButton, { borderColor: colors.border }]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name={rightAction.icon} size={24} color="#FFFFFF" />
+              <Ionicons name={rightAction.icon} size={20} color={colors.text} />
             </TouchableOpacity>
           ) : (
-            <View style={styles.actionButton} />
+            <View style={styles.iconPlaceholder} />
           )}
         </View>
       </View>
@@ -91,50 +119,69 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1000,
-    elevation: 4,
+    zIndex: 50,
+    elevation: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerInner: {
     flex: 1,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: Layout.screenPaddingLarge,
     paddingBottom: spacing.md,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  headerBackdrop: {
+    position: 'absolute',
+    left: Layout.screenPaddingLarge - 12,
+    right: Layout.screenPaddingLarge - 12,
+    top: spacing.sm,
+    bottom: spacing.sm,
+    borderRadius: radius.full,
+  },
+  headerAccent: {
+    position: 'absolute',
+    left: Layout.screenPaddingLarge,
+    right: Layout.screenPaddingLarge,
+    bottom: 6,
+    height: 3,
+    borderRadius: radius.full,
+    opacity: 0.8,
   },
   headerContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.md,
   },
-  actionButton: {
+  iconButton: {
     width: 40,
     height: 40,
+    borderRadius: radius.full,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+  },
+  iconPlaceholder: {
+    width: 40,
+    height: 40,
   },
   titleContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
+    gap: 4,
   },
   title: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
-    color: '#FFFFFF',
-    textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginTop: 2,
-    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    opacity: 0.8,
   },
 });
 

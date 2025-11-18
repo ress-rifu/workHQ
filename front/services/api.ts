@@ -7,6 +7,10 @@ import { supabase } from '../lib/supabase';
 // Use production Vercel URL by default, or env variable if set
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'https://workhq-api.vercel.app';
 const API_URL = `${BACKEND_URL}/api`;
+const DEBUG = __DEV__; // Only log in development
+
+// Request deduplication cache
+const pendingRequests = new Map<string, Promise<any>>();
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -32,67 +36,86 @@ async function getAuthToken(): Promise<string | null> {
 }
 
 /**
- * Make authenticated API request with timeout
+ * Make authenticated API request with timeout and deduplication
  */
 export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  try {
-    const token = await getAuthToken();
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (options.headers) {
-      Object.assign(headers, options.headers);
-    }
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    // Create timeout controller (30 seconds timeout - increased for slow connections)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    console.log(`📡 API Request: ${endpoint}`);
-    console.log(`🌐 Backend URL: ${BACKEND_URL}`);
-
-    try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      console.log(`✅ API Response [${endpoint}]: ${response.status}`);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || 'Request failed');
-      }
-
-      return data;
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      if (fetchError.name === 'AbortError') {
-        console.error(`⏱️ Request timeout [${endpoint}] - Backend may be sleeping or unreachable`);
-        throw new Error('Request timeout - Backend server may be sleeping. Please try again in a moment.');
-      }
-      throw fetchError;
-    }
-  } catch (error: any) {
-    console.error(`❌ API Error [${endpoint}]:`, error);
-    return {
-      success: false,
-      error: error.message || 'An error occurred',
-    };
+  // Create a unique cache key for request deduplication
+  const cacheKey = `${options.method || 'GET'}:${endpoint}:${JSON.stringify(options.body || '')}`;
+  
+  // Check if there's already a pending request for this endpoint
+  if (pendingRequests.has(cacheKey)) {
+    if (DEBUG) console.log(`♻️ Reusing pending request for ${endpoint}`);
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create the request promise
+  const requestPromise = (async () => {
+    try {
+      const token = await getAuthToken();
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (options.headers) {
+        Object.assign(headers, options.headers);
+      }
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Create timeout controller (10 seconds timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      if (DEBUG) console.log(`📡 API Request: ${endpoint}`);
+
+      try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (DEBUG) console.log(`✅ API Response [${endpoint}]: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'Request failed');
+        }
+
+        return data;
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.error(`⏱️ Request timeout [${endpoint}]`);
+          throw new Error('Request timeout. Please check your connection.');
+        }
+        throw fetchError;
+      }
+    } catch (error: any) {
+      console.error(`❌ API Error [${endpoint}]:`, error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+      };
+    } finally {
+      // Remove from cache after completion
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store the pending request
+  pendingRequests.set(cacheKey, requestPromise);
+
+  return requestPromise;
 }
 
 /**

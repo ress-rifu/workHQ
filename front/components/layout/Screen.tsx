@@ -36,25 +36,34 @@ export function Screen({
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
+  // Add bottom padding to account for absolute-positioned tab bar
+  const tabBarSpacing = Layout.tabBarHeight + insets.bottom + spacing.md + spacing.xl;
+  
+  // Add top padding if there's a fixed header (AppHeader is ~80px with safe area)
+  const headerSpacing = hasHeader ? Layout.headerHeight + insets.top + spacing.md : 0;
+
+  const basePadding = padding ? Layout.screenPadding : 0;
+
   const screenStyle: ViewStyle = {
     flex: 1,
     backgroundColor: colors.background,
   };
 
-  const paddingStyle = padding ? { padding: Layout.screenPadding } : {};
+  const paddingStyle: ViewStyle = padding
+    ? {
+        paddingHorizontal: basePadding,
+      }
+    : {};
 
-  // Add bottom padding to account for absolute-positioned tab bar
-  const tabBarSpacing = Layout.tabBarHeight + insets.bottom + spacing.md + spacing.xl;
-  
-  // Add top padding if there's a fixed header (AppHeader is ~80px with safe area)
-  const headerSpacing = hasHeader ? 80 + insets.top + spacing.md : 0;
+  const viewPaddingTop = basePadding + headerSpacing;
+  const viewPaddingBottom = basePadding + tabBarSpacing;
   
   const scrollContentStyle: ViewStyle = scrollable 
     ? { 
-        paddingBottom: tabBarSpacing,
-        paddingTop: headerSpacing,
+        paddingBottom: viewPaddingBottom,
+        paddingTop: viewPaddingTop,
       }
-    : { paddingTop: headerSpacing };
+    : { paddingTop: viewPaddingTop };
 
   const Wrapper = safe ? SafeAreaView : View;
 
@@ -68,7 +77,19 @@ export function Screen({
       {children}
     </ScrollView>
   ) : (
-    <View style={[screenStyle, paddingStyle, style]}>{children}</View>
+    <View
+      style={[
+        screenStyle,
+        paddingStyle,
+        style,
+        {
+          paddingTop: viewPaddingTop,
+          paddingBottom: viewPaddingBottom,
+        },
+      ]}
+    >
+      {children}
+    </View>
   );
 
   return (

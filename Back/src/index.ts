@@ -10,6 +10,8 @@ import leaveRoutes from './routes/leave.routes';
 import attendanceRoutes from './routes/attendance.routes';
 import payrollRoutes from './routes/payroll.routes';
 import hrRoutes from './routes/hr.routes';
+import announcementRoutes from './routes/announcement.routes';
+import adminRoutes from './routes/admin.routes';
 
 // Load environment variables
 dotenv.config();
@@ -65,6 +67,8 @@ app.use('/api/leave', leaveRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/hr', hrRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

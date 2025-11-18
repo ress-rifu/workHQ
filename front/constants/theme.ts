@@ -3,24 +3,28 @@
  * WorkHQ - Joyful, Friendly, Soft UI Theme
  */
 
-// Global Spacing Tokens (CRITICAL - Use these everywhere!)
+// Global Spacing Tokens - Industry Standard (8px base)
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  xxl: 32,
-  xxxl: 48,
+  xs: 4,      // Micro spacing
+  sm: 8,      // Small spacing
+  md: 16,     // Base spacing (most common)
+  lg: 20,     // Large spacing
+  xl: 24,     // Extra large
+  '2xl': 32,  // 2x extra large
+  '3xl': 40,  // 3x extra large
+  '4xl': 48,  // 4x extra large
+  '5xl': 64,  // 5x extra large
 };
 
-// Global Border Radius Tokens (CRITICAL - Soft, rounded aesthetic)
+// Global Border Radius Tokens - Modern, Soft Aesthetic
 export const radius = {
-  sm: 8,    // Small elements like tags
-  md: 16,   // Default for cards, inputs, modals
-  lg: 24,   // Large containers
-  xl: 32,   // Extra large
-  full: 999, // Pill-shaped buttons
+  xs: 6,     // Tiny elements
+  sm: 8,     // Small elements like tags
+  md: 12,    // Default for cards, inputs
+  lg: 16,    // Large containers
+  xl: 20,    // Extra large
+  '2xl': 24, // Very large
+  full: 9999, // Pill-shaped buttons
 };
 
 // Joyful Tonal Palettes - Warm, Vibrant, Optimistic
@@ -297,43 +301,14 @@ export const Typography = {
 export const Spacing = spacing;
 export const BorderRadius = radius;
 
-// Soft, diffused shadows for joyful theme
-export const Shadows = {
-  sm: {
-    shadowColor: '#FF6B3D', // Warm shadow color
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#FF6B3D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: '#FF6B3D',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  xl: {
-    shadowColor: '#FF6B3D',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 30,
-    elevation: 12,
-  },
-};
-
 export const Layout = {
-  screenPadding: Spacing.md,
+  screenPadding: spacing.md,        // 16px
+  screenPaddingLarge: spacing.lg,    // 20px
   maxContentWidth: 600,
-  headerHeight: 60,
-  tabBarHeight: 60,
+  headerHeight: 64,
+  tabBarHeight: 64,
+  cardPadding: spacing.lg,           // 20px
+  sectionSpacing: spacing['2xl'],    // 32px
 };
 
 export const Animation = {

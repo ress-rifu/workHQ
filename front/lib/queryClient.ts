@@ -10,8 +10,8 @@ export const queryClient = new QueryClient({
         if (error?.response?.status >= 400 && error?.response?.status < 500) {
           return false;
         }
-        // Retry max 2 times for server errors
-        return failureCount < 2;
+        // Only retry once for faster failure feedback
+        return failureCount < 1;
       },
       refetchOnWindowFocus: false, // Don't refetch on window focus (mobile app)
       refetchOnReconnect: true, // Refetch when network reconnects

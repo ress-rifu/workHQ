@@ -48,6 +48,7 @@ export const Modal = React.memo(function Modal({
               styles.modalContent,
               {
                 backgroundColor: colors.card, // Solid, warm background
+                borderColor: colors.borderLight,
               },
             ]}
           >
@@ -73,11 +74,7 @@ const styles = StyleSheet.create({
   modalContent: {
     borderRadius: radius.xl, // Soft, rounded corners
     padding: spacing.xxl, // Generous padding
-    shadowColor: '#FF6B3D', // Warm shadow
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 30,
-    elevation: 10,
+    borderWidth: StyleSheet.hairlineWidth * 2,
   },
 });
 

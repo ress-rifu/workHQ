@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -21,9 +21,18 @@ export default function CreateAnnouncementScreen() {
   const [priority, setPriority] = useState<Priority>('NORMAL');
   const [loading, setLoading] = useState(false);
 
+  const unauthorized = Boolean(
+    profile && profile.role !== 'HR' && profile.role !== 'ADMIN'
+  );
+
   // Only HR or ADMIN can access this screen
-  if (profile?.role !== 'HR' && profile?.role !== 'ADMIN') {
-    router.replace('/' as any);
+  useEffect(() => {
+    if (unauthorized) {
+      router.replace('/' as any);
+    }
+  }, [unauthorized, router]);
+
+  if (unauthorized) {
     return null;
   }
 

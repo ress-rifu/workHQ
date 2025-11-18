@@ -82,7 +82,7 @@ export default function PayrollScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {isHROrAdmin && <SidebarToggle />}
+            <SidebarToggle />
             <View>
               <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Payroll</Text>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Salary overview</Text>

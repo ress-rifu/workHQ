@@ -1,28 +1,55 @@
 import { View, StyleSheet } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, usePathname } from 'expo-router';
 import { useEffect } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { Sidebar, SidebarItem } from '../../../components/layout';
 
 export default function AdminLayout() {
   const { colors } = useTheme();
-  const { profile } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const { profile } = useAuth();
 
+  const isAdmin = profile?.role === 'ADMIN';
+
+  // Redirect non-admins away from Admin section
   useEffect(() => {
-    // Check if user is ADMIN, if not redirect to home
-    if (profile && profile.role !== 'ADMIN') {
+    if (profile && !isAdmin) {
       router.replace('/');
     }
-  }, [profile, router]);
+  }, [profile, isAdmin, router]);
 
-  // Don't render if user doesn't have access
-  if (profile && profile.role !== 'ADMIN') {
-    return null;
-  }
+  const sidebarItems: SidebarItem[] = [
+    {
+      id: 'users',
+      label: 'User Management',
+      icon: 'people',
+      path: '/admin',
+    },
+    {
+      id: 'announcements',
+      label: 'Create Announcement',
+      icon: 'megaphone',
+      path: '/announcements/create',
+    },
+    {
+      id: 'back-home',
+      label: 'Back to Home',
+      icon: 'home',
+      path: '/',
+    },
+  ];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {isAdmin && (
+        <Sidebar
+          title="Admin"
+          subtitle="Control Panel"
+          items={sidebarItems}
+        />
+      )}
       <Stack
         screenOptions={{
           headerShown: false,

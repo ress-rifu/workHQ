@@ -128,7 +128,7 @@ export default function HomeScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {isHROrAdmin && <SidebarToggle />}
+            <SidebarToggle />
             <View>
               <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
               <Text style={[styles.userName, { color: colors.text }]}>

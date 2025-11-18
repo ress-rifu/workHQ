@@ -100,16 +100,7 @@ export default function EditProfileScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {isHROrAdmin ? (
-              <SidebarToggle />
-            ) : (
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={[styles.iconButton, { borderColor: colors.border }]}
-              >
-                <Ionicons name="arrow-back" size={20} color={colors.text} />
-              </TouchableOpacity>
-            )}
+            <SidebarToggle />
             <View>
               <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Profile</Text>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>

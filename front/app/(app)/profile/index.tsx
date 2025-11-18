@@ -102,7 +102,7 @@ export default function ProfileScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {(profile?.role === 'HR' || profile?.role === 'ADMIN') && <SidebarToggle />}
+            <SidebarToggle />
             <View>
               <Text style={[styles.greeting, { color: colors.textSecondary }]}>Your Profile</Text>
               <Text style={[styles.userName, { color: colors.text }]}>

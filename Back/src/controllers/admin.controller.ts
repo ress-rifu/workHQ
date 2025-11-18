@@ -3,6 +3,80 @@ import { adminService } from '../services/admin.service';
 
 export const adminController = {
   /**
+   * POST /api/admin/users
+   * Create a new user (Admin only)
+   * Can create EMPLOYEE or HR users
+   */
+  async createUser(req: Request, res: Response) {
+    try {
+      if (req.user?.role !== 'ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'Admin access required'
+        });
+      }
+
+      const { email, password, fullName, role, employeeCode, department, designation, joinDate, salary } = req.body;
+
+      // Validation
+      if (!email || !password || !fullName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email, password, and full name are required'
+        });
+      }
+
+      if (!role || !['EMPLOYEE', 'HR'].includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Role must be EMPLOYEE or HR'
+        });
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email format'
+        });
+      }
+
+      // Password validation
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
+
+      const result = await adminService.createUser({
+        email,
+        password,
+        fullName,
+        role,
+        employeeCode,
+        department,
+        designation,
+        joinDate: joinDate ? new Date(joinDate) : undefined,
+        salary
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: result.user,
+        message: result.message
+      });
+    } catch (error: any) {
+      console.error('Create user error:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to create user'
+      });
+    }
+  },
+
+  /**
    * GET /api/admin/users
    * Get all users
    */

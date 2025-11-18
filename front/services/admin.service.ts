@@ -42,7 +42,27 @@ export interface AdminAttendance {
   location: AdminLocation | null;
 }
 
+export interface CreateUserData {
+  email: string;
+  password: string;
+  fullName: string;
+  role: 'EMPLOYEE' | 'HR';
+  employeeCode?: string;
+  department?: string;
+  designation?: string;
+  joinDate?: string;
+  salary?: number;
+}
+
 export const adminService = {
+  /**
+   * Create a new user (Admin only)
+   * Can create EMPLOYEE or HR users
+   */
+  async createUser(data: CreateUserData) {
+    return api.post<AdminUser>('/admin/users', data);
+  },
+
   /**
    * Get all users
    */

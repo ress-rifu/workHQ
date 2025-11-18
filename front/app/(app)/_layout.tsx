@@ -4,7 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { Sidebar, SidebarItem } from '../../components/layout';
 import { Layout, radius, spacing } from '../../constants/theme';
+import { useState, useEffect } from 'react';
+import { hrService } from '../../services/hr.service';
 
 export default function AppLayout() {
   const { colors } = useTheme();
@@ -13,37 +16,163 @@ export default function AppLayout() {
   
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
   const isAdmin = profile?.role === 'ADMIN';
+  const [pendingLeaves, setPendingLeaves] = useState(0);
+
+  useEffect(() => {
+    if (isHROrAdmin) {
+      loadHRStats();
+    }
+  }, [isHROrAdmin]);
+
+  const loadHRStats = async () => {
+    try {
+      const response = await hrService.getHRStats();
+      if (response.success && response.data) {
+        setPendingLeaves(response.data.pendingLeaves);
+      }
+    } catch (err) {
+      console.error('Failed to load HR stats:', err);
+    }
+  };
+
+  // Role-specific sidebar items
+  const getSidebarItems = (): SidebarItem[] => {
+    const baseItems: SidebarItem[] = [
+      {
+        id: 'home',
+        label: 'Home',
+        icon: 'home',
+        path: '/',
+      },
+      {
+        id: 'attendance',
+        label: 'Attendance',
+        icon: 'location',
+        path: '/attendance',
+      },
+      {
+        id: 'leave',
+        label: 'Leave',
+        icon: 'calendar',
+        path: '/leave',
+      },
+      {
+        id: 'payroll',
+        label: 'Payroll',
+        icon: 'cash',
+        path: '/payroll',
+      },
+    ];
+
+    if (isAdmin) {
+      // Admin gets all items including HR and Admin panels
+      return [
+        ...baseItems,
+        {
+          id: 'hr',
+          label: 'HR Management',
+          icon: 'briefcase' as const,
+          path: '/hr',
+          badge: pendingLeaves,
+        },
+        {
+          id: 'admin',
+          label: 'Admin Panel',
+          icon: 'shield-checkmark' as const,
+          path: '/admin',
+        },
+        {
+          id: 'profile',
+          label: 'Profile',
+          icon: 'person',
+          path: '/profile',
+        },
+      ];
+    } else if (profile?.role === 'HR') {
+      // HR gets base items + HR Management
+      return [
+        ...baseItems,
+        {
+          id: 'hr',
+          label: 'HR Management',
+          icon: 'briefcase' as const,
+          path: '/hr',
+          badge: pendingLeaves,
+        },
+        {
+          id: 'profile',
+          label: 'Profile',
+          icon: 'person',
+          path: '/profile',
+        },
+      ];
+    } else {
+      // Employee gets only base items
+      return [
+        ...baseItems,
+        {
+          id: 'profile',
+          label: 'Profile',
+          icon: 'person',
+          path: '/profile',
+        },
+      ];
+    }
+  };
+
+  const sidebarItems = getSidebarItems();
+
+  // Get sidebar title and subtitle based on role
+  const getSidebarTitle = () => {
+    if (isAdmin) return "Admin";
+    if (profile?.role === 'HR') return "HR";
+    return "WorkHQ";
+  };
+
+  const getSidebarSubtitle = () => {
+    if (isAdmin) return "Control Panel";
+    if (profile?.role === 'HR') return "Management";
+    return "Navigation";
+  };
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textTertiary,
-        tabBarStyle: isHROrAdmin ? { display: 'none' } : {
-          position: 'absolute',
-          backgroundColor: colors.card,
-          borderTopWidth: 0,
-          height: Layout.tabBarHeight + insets.bottom,
-          paddingBottom: insets.bottom + spacing.xs,
-          paddingTop: spacing.sm,
-          paddingHorizontal: spacing.md,
-          marginHorizontal: spacing.lg,
-          marginBottom: insets.bottom + spacing.md,
-          borderRadius: radius.full,
-          borderWidth: StyleSheet.hairlineWidth * 2,
-          borderColor: colors.borderLight,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '700',
-          marginTop: 2,
-        },
-        tabBarIconStyle: {
-          marginTop: 4,
-        },
-      }}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {isHROrAdmin && (
+        <Sidebar
+          title={getSidebarTitle()}
+          subtitle={getSidebarSubtitle()}
+          items={sidebarItems}
+        />
+      )}
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textTertiary,
+          tabBarStyle: isHROrAdmin ? { display: 'none' } : {
+            position: 'absolute',
+            backgroundColor: colors.card,
+            borderTopWidth: 0,
+            height: Layout.tabBarHeight + insets.bottom,
+            paddingBottom: insets.bottom + spacing.xs,
+            paddingTop: spacing.sm,
+            paddingHorizontal: spacing.md,
+            marginHorizontal: spacing.lg,
+            marginBottom: insets.bottom + spacing.md,
+            borderRadius: radius.full,
+            borderWidth: StyleSheet.hairlineWidth * 2,
+            borderColor: colors.borderLight,
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '700',
+            marginTop: 2,
+          },
+          tabBarIconStyle: {
+            marginTop: 4,
+          },
+        }}
+      >
       <Tabs.Screen
         name="index"
         options={{
@@ -116,6 +245,7 @@ export default function AppLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }
 

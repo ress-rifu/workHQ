@@ -2,7 +2,8 @@ import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, Alert, Scroll
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Badge, Button, Divider, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +12,9 @@ import { leaveService, LeaveBalance, Leave } from '../../../services/leave.servi
 export default function LeaveScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
   
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
   const [applications, setApplications] = useState<Leave[]>([]);
@@ -124,8 +128,11 @@ export default function LeaveScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Manage time off</Text>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Manage time off</Text>
+            </View>
           </View>
           <TouchableOpacity
             style={[styles.iconButton, { borderColor: colors.border }]}
@@ -274,7 +281,9 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   headerSubtitle: {
     fontSize: Typography.fontSize.sm,

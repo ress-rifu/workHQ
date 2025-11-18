@@ -1,7 +1,41 @@
 import { prisma } from '../utils/prisma';
 import { Role } from '@prisma/client';
+import { createUser } from './auth.service';
 
 export const adminService = {
+  /**
+   * Create a new user (Admin only)
+   * Can create EMPLOYEE or HR users
+   */
+  async createUser(data: {
+    email: string;
+    password: string;
+    fullName: string;
+    role: 'EMPLOYEE' | 'HR';
+    employeeCode?: string;
+    department?: string;
+    designation?: string;
+    joinDate?: Date;
+    salary?: number;
+  }) {
+    // Only allow creating EMPLOYEE or HR users
+    if (data.role !== 'EMPLOYEE' && data.role !== 'HR') {
+      throw new Error('Only EMPLOYEE and HR users can be created');
+    }
+
+    return await createUser({
+      email: data.email,
+      password: data.password,
+      fullName: data.fullName,
+      role: data.role as Role,
+      employeeCode: data.employeeCode,
+      department: data.department,
+      designation: data.designation,
+      joinDate: data.joinDate,
+      salary: data.salary
+    });
+  },
+
   /**
    * Get all users (Admin only)
    */

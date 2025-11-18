@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { SidebarToggle } from './Sidebar';
 import { Typography, spacing, radius } from '../../constants/theme';
 
 export type HeaderVariant = 'default' | 'gradient' | 'transparent';
@@ -30,8 +32,11 @@ export function Header({
   large = false,
 }: HeaderProps) {
   const { colors } = useTheme();
+  const { profile } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -75,7 +80,9 @@ export function Header({
     >
       <View style={styles.content}>
         <View style={styles.leftSection}>
-          {showBack && (
+          {isHROrAdmin ? (
+            <SidebarToggle />
+          ) : showBack ? (
             <TouchableOpacity
               onPress={handleBackPress}
               style={styles.backButton}
@@ -93,7 +100,7 @@ export function Header({
                 />
               </View>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
 
         <View style={[styles.centerSection, large && styles.centerSectionLarge]}>

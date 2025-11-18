@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { useState } from 'react';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSidebar } from '../../contexts/SidebarContext';
 import { Typography, Spacing } from '../../constants/theme';
 
 export interface SidebarItem {
@@ -24,10 +24,10 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { colors } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, closeSidebar } = useSidebar();
 
   const handleItemPress = (item: SidebarItem) => {
-    setIsOpen(false);
+    closeSidebar();
     if (onItemPress) {
       onItemPress(item);
     } else {
@@ -40,27 +40,16 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
   };
 
   return (
-    <>
-      {/* Toggle Button */}
-      <TouchableOpacity
-        style={[styles.toggleButton, { backgroundColor: colors.card }]}
-        onPress={() => setIsOpen(!isOpen)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="menu" size={24} color={colors.text} />
-      </TouchableOpacity>
-
-      {/* Sidebar Modal */}
-      <Modal
-        visible={isOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsOpen(false)}
-      >
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="fade"
+      onRequestClose={closeSidebar}
+    >
         <TouchableOpacity
           style={styles.overlay}
           activeOpacity={1}
-          onPress={() => setIsOpen(false)}
+          onPress={closeSidebar}
         >
           <TouchableOpacity
             activeOpacity={1}
@@ -77,7 +66,7 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
               </View>
               <TouchableOpacity
                 style={styles.closeButton}
-                onPress={() => setIsOpen(false)}
+                onPress={closeSidebar}
               >
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
@@ -130,26 +119,32 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </>
+  );
+}
+
+export function SidebarToggle() {
+  const { colors } = useTheme();
+  const { toggleSidebar } = useSidebar();
+
+  return (
+    <TouchableOpacity
+      style={[styles.toggleButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+      onPress={toggleSidebar}
+      activeOpacity={0.8}
+    >
+      <Ionicons name="menu" size={20} color={colors.text} />
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   toggleButton: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    zIndex: 1000,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    borderWidth: 1,
   },
   overlay: {
     flex: 1,

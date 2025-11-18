@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Layout, spacing } from '../../constants/theme';
 
 interface ScreenProps {
@@ -34,10 +35,14 @@ export function Screen({
   hasHeader = false,
 }: ScreenProps) {
   const { colors, isDark } = useTheme();
+  const { profile } = useAuth();
   const insets = useSafeAreaInsets();
 
-  // Add bottom padding to account for absolute-positioned tab bar
-  const tabBarSpacing = Layout.tabBarHeight + insets.bottom + spacing.md + spacing.xl;
+  // Check if tab bar should be visible (hidden for HR/Admin users)
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
+  
+  // Add bottom padding to account for absolute-positioned tab bar (only if tab bar is visible)
+  const tabBarSpacing = isHROrAdmin ? 0 : Layout.tabBarHeight + insets.bottom + spacing.md + spacing.xl;
   
   // Add top padding if there's a fixed header (AppHeader is ~80px with safe area)
   const headerSpacing = hasHeader ? Layout.headerHeight + insets.top + spacing.md : 0;
@@ -93,7 +98,7 @@ export function Screen({
   );
 
   return (
-    <Wrapper style={screenStyle} edges={['top', 'left', 'right']}>
+    <Wrapper style={screenStyle} edges={isHROrAdmin ? ['top', 'left', 'right', 'bottom'] : ['top', 'left', 'right']}>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}

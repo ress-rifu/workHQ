@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, Header } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Button, Input, Card } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,9 @@ import { leaveService, LeaveType } from '../../../services/leave.service';
 export default function ApplyLeaveScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
   
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [selectedLeaveType, setSelectedLeaveType] = useState<LeaveType | null>(null);
@@ -131,8 +135,27 @@ export default function ApplyLeaveScreen() {
 
   if (loading) {
     return (
-      <Screen safe>
-        <Header title="Apply for Leave" showBack />
+      <Screen safe padding={false}>
+        <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              {isHROrAdmin ? (
+                <SidebarToggle />
+              ) : (
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={[styles.iconButton, { borderColor: colors.border }]}
+                >
+                  <Ionicons name="arrow-back" size={20} color={colors.text} />
+                </TouchableOpacity>
+              )}
+              <View>
+                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Apply for Leave</Text>
+              </View>
+            </View>
+          </View>
+        </View>
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: colors.text }]}>
             Loading...
@@ -144,8 +167,27 @@ export default function ApplyLeaveScreen() {
 
   if (error || leaveTypes.length === 0) {
     return (
-      <Screen safe>
-        <Header title="Apply for Leave" showBack />
+      <Screen safe padding={false}>
+        <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              {isHROrAdmin ? (
+                <SidebarToggle />
+              ) : (
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={[styles.iconButton, { borderColor: colors.border }]}
+                >
+                  <Ionicons name="arrow-back" size={20} color={colors.text} />
+                </TouchableOpacity>
+              )}
+              <View>
+                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Apply for Leave</Text>
+              </View>
+            </View>
+          </View>
+        </View>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color={colors.error} />
           <Text style={[styles.errorText, { color: colors.text }]}>
@@ -160,10 +202,34 @@ export default function ApplyLeaveScreen() {
   const workingDays = calculateDays();
 
   return (
-    <Screen scrollable safe keyboardAvoiding>
-      <Header title="Apply for Leave" showBack />
+    <Screen safe padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin ? (
+              <SidebarToggle />
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={[styles.iconButton, { borderColor: colors.border }]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Apply for Leave</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
-      <Card padding="lg" shadow="md" style={styles.card}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Card padding="lg" shadow="md" style={styles.card}>
         {/* Leave Type Selection */}
         <View style={styles.section}>
           <Text style={[styles.label, { color: colors.text }]}>Leave Type *</Text>
@@ -280,6 +346,7 @@ export default function ApplyLeaveScreen() {
           />
         </View>
       </Card>
+      </ScrollView>
 
       {/* Date Pickers */}
       {showStartPicker && (
@@ -319,8 +386,52 @@ export default function ApplyLeaveScreen() {
 }
 
 const styles = StyleSheet.create({
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.6,
+    lineHeight: 36,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
+  },
   card: {
-    marginTop: 24,
     borderRadius: 20,
     paddingVertical: 8,
   },

@@ -1,17 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Screen } from '../../components/layout';
-import { Card, Avatar, Badge, LoadingSpinner } from '../../components/ui';
+import { Screen, SidebarToggle } from '../../components/layout';
+import { Card, Avatar, Badge, LoadingSpinner, Modal, Button } from '../../components/ui';
 import { Typography, Spacing } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { attendanceService, TodayStatus } from '../../services/attendance.service';
 import { leaveService, LeaveBalance } from '../../services/leave.service';
 import { profileService, ProfileStats } from '../../services/profile.service';
 import { hrService, HRStats } from '../../services/hr.service';
-import { announcementService, Announcement } from '../../services/announcement.service';
+import { announcementService, Announcement, AnnouncementPriority } from '../../services/announcement.service';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -25,6 +25,11 @@ export default function HomeScreen() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementContent, setAnnouncementContent] = useState('');
+  const [announcementPriority, setAnnouncementPriority] = useState<AnnouncementPriority>('NORMAL');
+  const [creatingAnnouncement, setCreatingAnnouncement] = useState(false);
   
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
@@ -123,10 +128,13 @@ export default function HomeScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
-            <Text style={[styles.userName, { color: colors.text }]}>
-              {user?.email?.split('@')[0] || 'Welcome'}
-            </Text>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {user?.email?.split('@')[0] || 'Welcome'}
+              </Text>
+            </View>
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity 
@@ -156,7 +164,7 @@ export default function HomeScreen() {
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Announcements</Text>
                 {isHROrAdmin && (
-                  <TouchableOpacity onPress={() => router.push('/announcements/create' as any)}>
+                  <TouchableOpacity onPress={() => setShowAnnouncementModal(true)}>
                     <Ionicons name="add-circle" size={24} color={colors.primary} />
                   </TouchableOpacity>
                 )}
@@ -337,6 +345,147 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Announcement Creation Modal */}
+      {isHROrAdmin && (
+        <Modal
+          visible={showAnnouncementModal}
+          onClose={() => {
+            setShowAnnouncementModal(false);
+            setAnnouncementTitle('');
+            setAnnouncementContent('');
+            setAnnouncementPriority('NORMAL');
+          }}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Create Announcement</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowAnnouncementModal(false);
+                  setAnnouncementTitle('');
+                  setAnnouncementContent('');
+                  setAnnouncementPriority('NORMAL');
+                }}
+              >
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.label, { color: colors.text }]}>Title *</Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+              placeholder="Enter announcement title"
+              placeholderTextColor={colors.textTertiary}
+              value={announcementTitle}
+              onChangeText={setAnnouncementTitle}
+              maxLength={100}
+            />
+
+            <Text style={[styles.label, { color: colors.text }]}>Priority *</Text>
+            <View style={styles.priorityContainer}>
+              {[
+                { value: 'LOW' as const, label: 'Low', color: colors.textSecondary },
+                { value: 'NORMAL' as const, label: 'Normal', color: colors.info },
+                { value: 'HIGH' as const, label: 'High', color: colors.warning },
+                { value: 'URGENT' as const, label: 'Urgent', color: colors.error },
+              ].map((p) => (
+                <TouchableOpacity
+                  key={p.value}
+                  style={[
+                    styles.priorityButton,
+                    {
+                      backgroundColor: announcementPriority === p.value ? p.color : colors.background,
+                      borderColor: p.color,
+                    },
+                  ]}
+                  onPress={() => setAnnouncementPriority(p.value)}
+                >
+                  <Text
+                    style={[
+                      styles.priorityText,
+                      {
+                        color: announcementPriority === p.value ? '#FFFFFF' : p.color,
+                      },
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: colors.text }]}>Content *</Text>
+            <TextInput
+              style={[
+                styles.textArea,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+              placeholder="Enter announcement content"
+              placeholderTextColor={colors.textTertiary}
+              value={announcementContent}
+              onChangeText={setAnnouncementContent}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+              maxLength={1000}
+            />
+
+            <Text style={[styles.charCount, { color: colors.textTertiary }]}>
+              {announcementContent.length}/1000 characters
+            </Text>
+
+            <Button
+              title="Create Announcement"
+              onPress={async () => {
+                if (!announcementTitle.trim()) {
+                  Alert.alert('Error', 'Please enter a title');
+                  return;
+                }
+                if (!announcementContent.trim()) {
+                  Alert.alert('Error', 'Please enter content');
+                  return;
+                }
+
+                setCreatingAnnouncement(true);
+                try {
+                  await announcementService.createAnnouncement({
+                    title: announcementTitle.trim(),
+                    content: announcementContent.trim(),
+                    priority: announcementPriority,
+                  });
+                  Alert.alert('Success', 'Announcement created successfully');
+                  setShowAnnouncementModal(false);
+                  setAnnouncementTitle('');
+                  setAnnouncementContent('');
+                  setAnnouncementPriority('NORMAL');
+                  loadDashboardData();
+                } catch (error) {
+                  console.error('Error creating announcement:', error);
+                  Alert.alert('Error', 'Failed to create announcement. Please try again.');
+                } finally {
+                  setCreatingAnnouncement(false);
+                }
+              }}
+              variant="primary"
+              size="lg"
+              disabled={creatingAnnouncement}
+              style={styles.submitButton}
+            />
+          </View>
+        </Modal>
+      )}
     </Screen>
   );
 }
@@ -356,7 +505,9 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
-    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   headerRight: {
     flexDirection: 'row',
@@ -523,6 +674,75 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     textAlign: 'center',
     letterSpacing: 0.2,
+  },
+  modalContent: {
+    width: '100%',
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  modalTitle: {
+    fontSize: Typography.fontSize['2xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.5,
+  },
+  label: {
+    fontSize: Typography.fontSize.base,
+    fontFamily: Typography.fontFamily.semibold,
+    marginBottom: 12,
+    marginTop: 20,
+  },
+  input: {
+    fontSize: Typography.fontSize.base,
+    fontFamily: Typography.fontFamily.regular,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  priorityContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  priorityButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 2,
+  },
+  priorityText: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.semibold,
+    textTransform: 'uppercase',
+  },
+  textArea: {
+    fontSize: Typography.fontSize.base,
+    fontFamily: Typography.fontFamily.regular,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 120,
+    marginBottom: 8,
+  },
+  charCount: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textAlign: 'right',
+    marginBottom: 24,
+  },
+  submitButton: {
+    marginTop: 8,
   },
 });
 

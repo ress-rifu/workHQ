@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, Header } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Badge, Button, Divider, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,9 @@ export default function LeaveDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
   
   const [leave, setLeave] = useState<Leave | null>(null);
   const [loading, setLoading] = useState(true);
@@ -127,8 +131,27 @@ export default function LeaveDetailsScreen() {
 
   if (error || !leave) {
     return (
-      <Screen safe>
-        <Header title="Leave Details" showBack />
+      <Screen safe padding={false}>
+        <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              {isHROrAdmin ? (
+                <SidebarToggle />
+              ) : (
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={[styles.iconButton, { borderColor: colors.border }]}
+                >
+                  <Ionicons name="arrow-back" size={20} color={colors.text} />
+                </TouchableOpacity>
+              )}
+              <View>
+                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Leave Details</Text>
+              </View>
+            </View>
+          </View>
+        </View>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color={colors.error} />
           <Text style={[styles.errorText, { color: colors.text }]}>
@@ -141,8 +164,27 @@ export default function LeaveDetailsScreen() {
   }
 
   return (
-    <Screen scrollable safe>
-      <Header title="Leave Details" showBack />
+    <Screen scrollable safe padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin ? (
+              <SidebarToggle />
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={[styles.iconButton, { borderColor: colors.border }]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Leave Details</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
       {/* Status Card */}
       <Card padding="lg" shadow="md" style={styles.card}>

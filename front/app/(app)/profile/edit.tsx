@@ -1,15 +1,20 @@
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, Header } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Button, Input, Card, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 import { profileService, User } from '../../../services/profile.service';
 
 export default function EditProfileScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile: authProfile } = useAuth();
+  
+  const isHROrAdmin = authProfile?.role === 'HR' || authProfile?.role === 'ADMIN';
   
   const [profile, setProfile] = useState<User | null>(null);
   const [fullName, setFullName] = useState('');
@@ -91,10 +96,34 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <Screen scrollable safe keyboardAvoiding>
-      <Header title="Edit Profile" showBack />
+    <Screen safe padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin ? (
+              <SidebarToggle />
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={[styles.iconButton, { borderColor: colors.border }]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Profile</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
-      <Card padding="lg" shadow="md" style={styles.card}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Card padding="lg" shadow="md" style={styles.card}>
         <Input
           label="Full Name"
           placeholder="Enter your full name"
@@ -160,13 +189,58 @@ export default function EditProfileScreen() {
           />
         </View>
       </Card>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.6,
+    lineHeight: 36,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
+  },
   card: {
-    marginTop: 24,
     borderRadius: 20,
     paddingVertical: 8,
   },

@@ -5,7 +5,9 @@
 import { supabase } from '../lib/supabase';
 
 // Use production Vercel URL by default, or env variable if set
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'https://workhq-api.vercel.app';
+const BACKEND_URL =
+  process.env.EXPO_PUBLIC_BACKEND_API_URL ||
+  'https://workhq-pbqtv6gip-rifus-projects-7770b67a.vercel.app';
 const API_URL = `${BACKEND_URL}/api`;
 const DEBUG = __DEV__; // Only log in development
 

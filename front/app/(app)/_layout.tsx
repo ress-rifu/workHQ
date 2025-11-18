@@ -20,7 +20,7 @@ export default function AppLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
-        tabBarStyle: {
+        tabBarStyle: isHROrAdmin ? { display: 'none' } : {
           position: 'absolute',
           backgroundColor: colors.card,
           borderTopWidth: 0,
@@ -55,12 +55,6 @@ export default function AppLayout() {
       />
       <Tabs.Screen
         name="dashboard"
-        options={{
-          href: null, // Hide from tabs
-        }}
-      />
-      <Tabs.Screen
-        name="announcements"
         options={{
           href: null, // Hide from tabs
         }}
@@ -103,7 +97,7 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="admin/index"
+        name="admin"
         options={{
           title: 'Admin',
           tabBarIcon: ({ color, size }) => (

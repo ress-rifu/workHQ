@@ -1,44 +1,29 @@
 import { View, StyleSheet } from 'react-native';
 import { Stack, useRouter, usePathname } from 'expo-router';
-import { useState, useEffect } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Sidebar, SidebarItem } from '../../../components/layout';
-import { hrService } from '../../../services/hr.service';
 
-export default function HRLayout() {
+export default function AdminLayout() {
   const { colors } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const { profile } = useAuth();
-  const [pendingLeaves, setPendingLeaves] = useState(0);
 
-  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
-
-  useEffect(() => {
-    if (isHROrAdmin) {
-      loadStats();
-    }
-  }, [isHROrAdmin]);
-
-  const loadStats = async () => {
-    try {
-      const response = await hrService.getHRStats();
-      if (response.success && response.data) {
-        setPendingLeaves(response.data.pendingLeaves);
-      }
-    } catch (err) {
-      console.error('Failed to load HR stats:', err);
-    }
-  };
+  const isAdmin = profile?.role === 'ADMIN';
 
   const sidebarItems: SidebarItem[] = [
     {
-      id: 'leave-requests',
-      label: 'Leave Requests',
-      icon: 'calendar',
-      path: '/hr',
-      badge: pendingLeaves,
+      id: 'users',
+      label: 'User Management',
+      icon: 'people',
+      path: '/admin',
+    },
+    {
+      id: 'announcements',
+      label: 'Create Announcement',
+      icon: 'megaphone',
+      path: '/announcements/create',
     },
     {
       id: 'back-home',
@@ -50,10 +35,10 @@ export default function HRLayout() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {isHROrAdmin && (
+      {isAdmin && (
         <Sidebar
-          title="HR"
-          subtitle="Management"
+          title="Admin"
+          subtitle="Control Panel"
           items={sidebarItems}
         />
       )}
@@ -64,7 +49,6 @@ export default function HRLayout() {
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="[id]" />
       </Stack>
     </View>
   );
@@ -75,4 +59,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

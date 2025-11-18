@@ -1,14 +1,16 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Screen } from '../../components/layout';
+import { Screen, SidebarToggle } from '../../components/layout';
 import { Card, Avatar, Badge } from '../../components/ui';
 import { Typography, Spacing } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { colors } = useTheme();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -23,10 +25,13 @@ export default function DashboardScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
-            <Text style={[styles.userName, { color: colors.text }]}>
-              {user?.email?.split('@')[0] || 'Dashboard'}
-            </Text>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {user?.email?.split('@')[0] || 'Dashboard'}
+              </Text>
+            </View>
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity 

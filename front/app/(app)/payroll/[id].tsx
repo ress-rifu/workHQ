@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, Header } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Button, LoadingSpinner, Divider } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,9 @@ export default function PayslipDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const [payslip, setPayslip] = useState<Payslip | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,8 +52,27 @@ export default function PayslipDetailScreen() {
 
   if (error || !payslip) {
     return (
-      <Screen safe>
-        <Header title="Payslip Details" showBack />
+      <Screen safe padding={false}>
+        <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              {isHROrAdmin ? (
+                <SidebarToggle />
+              ) : (
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={[styles.iconButton, { borderColor: colors.border }]}
+                >
+                  <Ionicons name="arrow-back" size={20} color={colors.text} />
+                </TouchableOpacity>
+              )}
+              <View>
+                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Payroll</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Payslip Details</Text>
+              </View>
+            </View>
+          </View>
+        </View>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color={colors.error} />
           <Text style={[styles.errorText, { color: colors.text }]}>
@@ -62,12 +85,31 @@ export default function PayslipDetailScreen() {
   }
 
   return (
-    <Screen scrollable safe>
-      <Header title="Payslip Details" showBack />
+    <Screen scrollable safe padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin ? (
+              <SidebarToggle />
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={[styles.iconButton, { borderColor: colors.border }]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Payroll</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Payslip Details</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
       {/* Header Card */}
       <Card padding="lg" shadow="lg" style={styles.headerCard}>
-        <View style={styles.headerContent}>
+        <View style={styles.cardHeaderContent}>
           <View style={[styles.headerIcon, { backgroundColor: colors.primaryLight }]}>
             <Ionicons name="document-text" size={32} color={colors.primary} />
           </View>
@@ -262,7 +304,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderRadius: 20,
   },
-  headerContent: {
+  cardHeaderContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
@@ -418,6 +460,46 @@ const styles = StyleSheet.create({
     minWidth: 160,
     borderRadius: 16,
     height: 52,
+  },
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.6,
+    lineHeight: 36,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
   },
 });
 

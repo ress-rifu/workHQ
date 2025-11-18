@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, AppHeader } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Badge, LoadingSpinner, Button } from '../../../components/ui';
 import { Typography, Spacing, radius } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,14 +13,22 @@ export default function LeaveRequestDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const [request, setRequest] = useState<LeaveRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
+    // Check if user is HR or ADMIN, if not redirect to home
+    if (profile && profile.role !== 'HR' && profile.role !== 'ADMIN') {
+      router.replace('/');
+      return;
+    }
     loadRequest();
-  }, [id]);
+  }, [id, profile, router]);
 
   const loadRequest = async () => {
     try {
@@ -144,9 +153,19 @@ export default function LeaveRequestDetailScreen() {
 
   if (!request) {
     return (
-      <Screen safe padding scrollable={false}>
-        <AppHeader title="Leave Request" showBack />
-        <View style={[styles.centerContent, { marginTop: 80 }]}>
+      <Screen safe padding={false} scrollable={false}>
+        <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              {isHROrAdmin && <SidebarToggle />}
+              <View>
+                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave Requests</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Leave Request</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        <View style={[styles.centerContent, { marginTop: 20 }]}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.textSecondary} />
           <Text style={[styles.errorText, { color: colors.text }]}>
             Leave request not found
@@ -161,7 +180,17 @@ export default function LeaveRequestDetailScreen() {
 
   return (
     <Screen safe padding={false} scrollable={false}>
-      <AppHeader title="Leave Request" showBack />
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave Requests</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Leave Request</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent} 
@@ -339,6 +368,38 @@ export default function LeaveRequestDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.6,
+    lineHeight: 36,
+  },
   scrollView: {
     flex: 1,
   },

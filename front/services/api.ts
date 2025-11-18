@@ -10,6 +10,7 @@ const BACKEND_URL =
   'https://workhq-pbqtv6gip-rifus-projects-7770b67a.vercel.app';
 const API_URL = `${BACKEND_URL}/api`;
 const DEBUG = __DEV__; // Only log in development
+const REQUEST_TIMEOUT_MS = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS || 20000);
 
 // Request deduplication cache
 const pendingRequests = new Map<string, Promise<any>>();
@@ -70,9 +71,9 @@ export async function apiRequest<T = any>(
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Create timeout controller (10 seconds timeout)
+      // Create timeout controller (default 20 seconds timeout, configurable via env)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
       if (DEBUG) console.log(`📡 API Request: ${endpoint}`);
 

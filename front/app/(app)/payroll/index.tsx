@@ -2,7 +2,8 @@ import { View, Text, StyleSheet, RefreshControl, ScrollView, TouchableOpacity } 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, AppHeader } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, AppHeader, SidebarToggle } from '../../../components/layout';
 import { Card, Button, LoadingSpinner, Divider } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +12,9 @@ import { payrollService, SalaryStructure, PayrollStats } from '../../../services
 export default function PayrollScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const [salaryStructure, setSalaryStructure] = useState<SalaryStructure | null>(null);
   const [stats, setStats] = useState<PayrollStats | null>(null);
@@ -78,8 +82,11 @@ export default function PayrollScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Payroll</Text>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Salary overview</Text>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Payroll</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Salary overview</Text>
+            </View>
           </View>
           <TouchableOpacity
             style={[styles.iconButton, { borderColor: colors.border }]}
@@ -273,7 +280,9 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   headerSubtitle: {
     fontSize: Typography.fontSize.sm,

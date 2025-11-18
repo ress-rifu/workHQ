@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 // User management
+router.post('/users', adminController.createUser);
 router.get('/users', adminController.getAllUsers);
 router.put('/users/:id/role', adminController.updateUserRole);
 router.delete('/users/:id', adminController.deleteUser);

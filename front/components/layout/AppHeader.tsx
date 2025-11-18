@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { SidebarToggle } from './Sidebar';
 import { Layout, Typography, spacing, radius } from '../../constants/theme';
 
 interface AppHeaderProps {
@@ -23,8 +25,11 @@ export function AppHeader({
   rightAction,
 }: AppHeaderProps) {
   const { colors, isDark } = useTheme();
+  const { profile } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const headerHeight = Layout.headerHeight + insets.top;
 
@@ -69,7 +74,9 @@ export function AppHeader({
           ]}
         />
         <View style={styles.headerContent}>
-          {showBack ? (
+          {isHROrAdmin ? (
+            <SidebarToggle />
+          ) : showBack ? (
             <TouchableOpacity
               onPress={() => router.back()}
               style={[styles.iconButton, { borderColor: colors.border }]}

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen } from '../../../components/layout';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Avatar, Badge, Button, Divider, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -102,10 +102,13 @@ export default function ProfileScreen() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Your Profile</Text>
-            <Text style={[styles.userName, { color: colors.text }]}>
-              {profile?.fullName || authUser?.email?.split('@')[0] || 'Profile'}
-            </Text>
+            {(profile?.role === 'HR' || profile?.role === 'ADMIN') && <SidebarToggle />}
+            <View>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>Your Profile</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {profile?.fullName || authUser?.email?.split('@')[0] || 'Profile'}
+              </Text>
+            </View>
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity 

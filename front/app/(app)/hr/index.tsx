@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, AppHeader } from '../../../components/layout';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Badge, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing, radius } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,8 @@ export default function HRLeaveRequestsScreen() {
   const router = useRouter();
   const { profile } = useAuth();
   const { colors } = useTheme();
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [stats, setStats] = useState<HRStats | null>(null);
@@ -99,10 +101,17 @@ export default function HRLeaveRequestsScreen() {
 
   return (
     <Screen safe padding={false} scrollable={false}>
-      <AppHeader
-        title="Leave Requests"
-        subtitle="Manage applications"
-      />
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Leave Requests</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Manage applications</Text>
+            </View>
+          </View>
+        </View>
+      </View>
       
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -281,6 +290,38 @@ export default function HRLeaveRequestsScreen() {
 }
 
 const styles = StyleSheet.create({
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.6,
+    lineHeight: 36,
+  },
   scrollView: {
     flex: 1,
   },

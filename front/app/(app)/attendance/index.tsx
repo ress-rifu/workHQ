@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, AppHeader, Header } from '../../../components/layout';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Screen, AppHeader, Header, SidebarToggle } from '../../../components/layout';
 import { Button, Card, Badge, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -57,7 +58,10 @@ export default function AttendanceScreen() {
 function AttendanceScreenMobile() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { profile } = useAuth();
   const mapRef = useRef<MapView>(null);
+  
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const [location, setLocation] = useState<ExpoLocation.LocationObject | null>(null);
   const [officeLocation, setOfficeLocation] = useState<Location | null>(null);
@@ -75,68 +79,75 @@ function AttendanceScreenMobile() {
   }, []);
 
   const initialize = async () => {
-    console.time('⚡ Attendance initialization');
-    
-    // Step 1: Request permission first (required)
-    const hasPermission = await requestLocationPermission();
-    if (!hasPermission) {
-      setLoading(false);
-      return;
-    }
-
-    // Step 2: Load everything in parallel for speed
-    console.time('⚡ Parallel API calls');
-    const [officeRes, statusRes, locationRes] = await Promise.all([
-      attendanceService.getPrimaryLocation().catch(err => {
-        console.error('Office location error:', err);
-        return { success: false, error: err.message };
-      }),
-      attendanceService.getTodayStatus().catch(err => {
-        console.error('Today status error:', err);
-        return { success: false, error: err.message };
-      }),
-      // Use BALANCED accuracy for faster initial load (upgrade later if needed)
-      ExpoLocation.getCurrentPositionAsync({
-        accuracy: ExpoLocation.Accuracy.Balanced,
-      }).catch(err => {
-        console.error('Location error:', err);
-        return null;
-      }),
-    ]);
-    console.timeEnd('⚡ Parallel API calls');
-
-    // Process results
-    if (officeRes.success && officeRes.data) {
-      setOfficeLocation(officeRes.data);
+    try {
+      console.time('⚡ Attendance initialization');
       
-      // Calculate distance if we have location
+      // Step 1: Request permission first (required)
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Load everything in parallel for speed
+      console.time('⚡ Parallel API calls');
+      const [officeRes, statusRes, locationRes] = await Promise.all([
+        attendanceService.getPrimaryLocation().catch(err => {
+          console.error('Office location error:', err);
+          return { success: false, error: err.message };
+        }),
+        attendanceService.getTodayStatus().catch(err => {
+          console.error('Today status error:', err);
+          return { success: false, error: err.message };
+        }),
+        // Use BALANCED accuracy for faster initial load (upgrade later if needed)
+        ExpoLocation.getCurrentPositionAsync({
+          accuracy: ExpoLocation.Accuracy.Balanced,
+        }).catch(err => {
+          console.error('Location error:', err);
+          return null;
+        }),
+      ]);
+      console.timeEnd('⚡ Parallel API calls');
+
+      // Process results
+      if (officeRes.success && officeRes.data) {
+        setOfficeLocation(officeRes.data);
+        
+        // Calculate distance if we have location
+        if (locationRes) {
+          setLocation(locationRes);
+          const dist = getDistanceFromLatLonInMeters(
+            locationRes.coords.latitude,
+            locationRes.coords.longitude,
+            officeRes.data.latitude,
+            officeRes.data.longitude
+          );
+          setDistance(dist);
+          setWithinRadius(dist <= officeRes.data.radiusMeters);
+        }
+      } else {
+        setError(officeRes.error || 'No office location found');
+      }
+
+      if (statusRes.success && statusRes.data) {
+        setTodayStatus(statusRes.data);
+      }
+
       if (locationRes) {
         setLocation(locationRes);
-        const dist = getDistanceFromLatLonInMeters(
-          locationRes.coords.latitude,
-          locationRes.coords.longitude,
-          officeRes.data.latitude,
-          officeRes.data.longitude
-        );
-        setDistance(dist);
-        setWithinRadius(dist <= officeRes.data.radiusMeters);
+      } else {
+        // Don't set error for location if it's not critical - just log warning
+        console.warn('Location not available, but continuing...');
       }
-    } else {
-      setError(officeRes.error || 'No office location found');
-    }
 
-    if (statusRes.success && statusRes.data) {
-      setTodayStatus(statusRes.data);
+      setLoading(false);
+      console.timeEnd('⚡ Attendance initialization');
+    } catch (err: any) {
+      console.error('❌ Attendance initialization error:', err);
+      setError(err.message || 'Failed to initialize attendance');
+      setLoading(false);
     }
-
-    if (locationRes) {
-      setLocation(locationRes);
-    } else {
-      setError('Failed to get location');
-    }
-
-    setLoading(false);
-    console.timeEnd('⚡ Attendance initialization');
   };
 
   const requestLocationPermission = async () => {
@@ -384,8 +395,11 @@ function AttendanceScreenMobile() {
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Attendance</Text>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Check In & Out</Text>
+            {isHROrAdmin && <SidebarToggle />}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Attendance</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Check In & Out</Text>
+            </View>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
@@ -403,7 +417,7 @@ function AttendanceScreenMobile() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.mapContainer}>
-          {officeLocation && (
+          {officeLocation ? (
             <MapView
               ref={mapRef}
               style={styles.map}
@@ -417,6 +431,13 @@ function AttendanceScreenMobile() {
               showsUserLocation={true}
               showsMyLocationButton={false}
               customMapStyle={isDark ? darkMapStyle : undefined}
+              onMapReady={() => {
+                console.log('✅ Map loaded successfully');
+              }}
+              onError={(error) => {
+                console.error('❌ MapView error:', error);
+                setError('Map failed to load. Please try again.');
+              }}
             >
               <Marker
                 coordinate={{
@@ -450,6 +471,13 @@ function AttendanceScreenMobile() {
                 strokeWidth={2}
               />
             </MapView>
+          ) : (
+            <View style={[styles.mapPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.mapPlaceholderText, { color: colors.textSecondary }]}>
+                Loading map...
+              </Text>
+            </View>
           )}
 
           <View style={styles.mapControls}>
@@ -698,7 +726,9 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   headerSubtitle: {
     fontSize: Typography.fontSize.sm,
@@ -741,6 +771,18 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  mapPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 360,
+  },
+  mapPlaceholderText: {
+    fontSize: Typography.fontSize.base,
+    fontFamily: Typography.fontFamily.medium,
   },
   mapControls: {
     position: 'absolute',

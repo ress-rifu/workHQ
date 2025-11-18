@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen } from '../../../components/layout';
+import { Screen, SidebarToggle } from '../../../components/layout';
 import { Card, Button, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,18 +74,33 @@ export default function CreateAnnouncementScreen() {
     }
   };
 
+  const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
+
   if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
-    <Screen>
-      <View style={[styles.header, { backgroundColor: colors.card }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Create Announcement</Text>
-        <View style={{ width: 24 }} />
+    <Screen padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {isHROrAdmin ? (
+              <SidebarToggle />
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={[styles.iconButton, { borderColor: colors.border }]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Announcements</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Create Announcement</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -174,30 +189,45 @@ export default function CreateAnnouncementScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    gap: 12,
   },
-  backButton: {
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.6,
+    lineHeight: 36,
+  },
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize['2xl'],
-    fontFamily: Typography.fontFamily.bold,
-    letterSpacing: -0.5,
+    borderWidth: 1,
   },
   container: {
     flex: 1,

@@ -17,7 +17,8 @@ export function useTodayAttendance() {
       const response = await api.get('/attendance/today');
       return response.data;
     },
-    refetchInterval: 1000 * 60, // Refetch every minute to keep check-in status up to date
+    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+    gcTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
   });
 }
 
@@ -45,6 +46,7 @@ export function useLocations() {
       return response.data;
     },
     staleTime: 1000 * 60 * 60, // Locations don't change often, stay fresh for 1 hour
+    gcTime: 1000 * 60 * 120, // Keep in cache for 2 hours
   });
 }
 

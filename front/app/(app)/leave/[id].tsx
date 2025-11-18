@@ -330,17 +330,19 @@ export default function LeaveDetailsScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: Spacing.md,
+    marginBottom: 24,
+    borderRadius: 16,
   },
   cardTitle: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.md,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
   statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 16,
   },
   statusIcon: {
     width: 64,
@@ -351,7 +353,7 @@ const styles = StyleSheet.create({
   },
   statusInfo: {
     flex: 1,
-    gap: Spacing.sm,
+    gap: 8,
   },
   statusTitle: {
     fontSize: Typography.fontSize.xl,
@@ -361,11 +363,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 10,
   },
   detailLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 12,
     flex: 1,
   },
   detailLabel: {
@@ -378,27 +381,30 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   reasonSection: {
-    gap: Spacing.sm,
+    gap: 12,
   },
   reasonText: {
     fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.regular,
-    lineHeight: Typography.fontSize.base * Typography.lineHeight.relaxed,
-    marginTop: Spacing.xs,
+    lineHeight: 24,
+    marginTop: 6,
   },
   dateRange: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.md,
+    marginTop: 24,
   },
   dateBox: {
     alignItems: 'center',
-    padding: Spacing.md,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 16,
   },
   dateDay: {
     fontSize: Typography.fontSize['4xl'],
     fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -1,
   },
   dateMonth: {
     fontSize: Typography.fontSize.sm,
@@ -409,25 +415,28 @@ const styles = StyleSheet.create({
   dateYear: {
     fontSize: Typography.fontSize.xs,
     fontFamily: Typography.fontFamily.regular,
+    opacity: 0.7,
   },
   dateArrow: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 16,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: 32,
+    gap: 16,
   },
   errorText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.medium,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
     textAlign: 'center',
+    lineHeight: 28,
   },
   retryButton: {
-    minWidth: 120,
+    minWidth: 160,
+    borderRadius: 16,
+    height: 52,
   },
 });
 

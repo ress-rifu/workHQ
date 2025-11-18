@@ -320,39 +320,43 @@ export default function ApplyLeaveScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    marginTop: Spacing.md,
+    marginTop: 24,
+    borderRadius: 20,
+    paddingVertical: 8,
   },
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: 32,
   },
   label: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.semibold,
-    marginBottom: Spacing.sm,
+    marginBottom: 8,
+    letterSpacing: 0.2,
   },
   leaveTypeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: 12,
   },
   leaveTypeButton: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
     borderWidth: 2,
   },
   leaveTypeText: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.semibold,
+    letterSpacing: 0.2,
   },
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderWidth: 1.5,
-    borderRadius: 12,
+    borderRadius: 16,
   },
   dateText: {
     fontSize: Typography.fontSize.base,
@@ -362,22 +366,24 @@ const styles = StyleSheet.create({
   daysDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: 12,
-    gap: Spacing.md,
-    marginBottom: Spacing.lg,
+    padding: 20,
+    borderRadius: 16,
+    gap: 12,
+    marginBottom: 24,
   },
   daysInfo: {
     flex: 1,
   },
   daysValue: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.3,
   },
   daysLabel: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.regular,
-    marginTop: 2,
+    marginTop: 4,
+    opacity: 0.7,
   },
   reasonInput: {
     height: 100,
@@ -385,11 +391,13 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.md,
+    gap: 16,
+    marginTop: 24,
   },
   button: {
     flex: 1,
+    borderRadius: 16,
+    height: 56,
   },
   loadingContainer: {
     flex: 1,
@@ -404,17 +412,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: 32,
+    gap: 16,
   },
   errorText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.medium,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
     textAlign: 'center',
+    lineHeight: 28,
   },
   retryButton: {
-    minWidth: 120,
+    minWidth: 160,
+    borderRadius: 16,
+    height: 52,
   },
 });
 

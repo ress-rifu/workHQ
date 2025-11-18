@@ -6,16 +6,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://rdkgfezrowfnlrbtiekn.supabase.co';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJka2dmZXpyb3dmbmxyYnRpZWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4OTUyNzEsImV4cCI6MjA3NzQ3MTI3MX0.UV_PmsUcpsrOmM5bn4Y8xrlFJCRvHX1dJOieykXwDIs';
 
-console.log('🔧 Initializing Supabase Client...');
-console.log('📍 URL:', supabaseUrl);
-console.log('🔑 Key preview:', supabaseAnonKey.substring(0, 20) + '...');
-console.log('🔑 Key length:', supabaseAnonKey.length);
+if (__DEV__) {
+  console.log('🔧 Initializing Supabase Client...');
+  console.log('📍 URL:', supabaseUrl);
+  console.log('🔑 Key preview:', supabaseAnonKey.substring(0, 20) + '...');
+  console.log('🔑 Key length:', supabaseAnonKey.length);
+}
 
 if (!process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
-  console.warn('⚠️  Missing Supabase environment variables. Please create a .env file with:');
-  console.warn('EXPO_PUBLIC_SUPABASE_URL=your-supabase-url');
-  console.warn('EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key');
-  console.warn('EXPO_PUBLIC_BACKEND_API_URL=your-backend-url');
+  if (__DEV__) {
+    console.warn('⚠️  Missing Supabase environment variables. Please create a .env file with:');
+    console.warn('EXPO_PUBLIC_SUPABASE_URL=your-supabase-url');
+    console.warn('EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key');
+    console.warn('EXPO_PUBLIC_BACKEND_API_URL=your-backend-url');
+  }
 }
 
 if (supabaseUrl === 'https://placeholder.supabase.co' || supabaseAnonKey === 'placeholder-key') {

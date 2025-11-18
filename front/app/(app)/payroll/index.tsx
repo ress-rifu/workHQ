@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -74,19 +74,28 @@ export default function PayrollScreen() {
   }
 
   return (
-    <Screen scrollable safe padding={false} hasHeader
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <AppHeader 
-        title="Payroll" 
-        subtitle="Your salary & earnings"
-        rightAction={{
-          icon: 'document-text-outline',
-          onPress: () => router.push('/payroll/payslips' as any),
-        }}
-      />
+    <Screen safe padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Payroll</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Salary overview</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.iconButton, { borderColor: colors.border }]}
+            onPress={() => router.push('/payroll/payslips' as any)}
+          >
+            <Ionicons name="document-text-outline" size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.content}>
         {/* Net Salary Card */}
         <Card padding="lg" shadow="lg" style={styles.salaryCard}>
           <View style={styles.salaryHeader}>
@@ -242,49 +251,80 @@ export default function PayrollScreen() {
             Payslips are generated at the end of each month
           </Text>
         </View>
-      </View>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
   },
   headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.6,
   },
   headerTitle: {
     fontSize: Typography.fontSize['3xl'],
     fontFamily: Typography.fontFamily.bold,
-    color: '#FFFFFF',
+    letterSpacing: -0.6,
+    lineHeight: 36,
   },
-  headerSubtitle: {
-    fontSize: Typography.fontSize.base,
-    fontFamily: Typography.fontFamily.medium,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: Spacing.xs,
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  scrollContent: {
+    paddingBottom: 160,
+    paddingTop: 12,
   },
   content: {
-    padding: Spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
   salaryCard: {
-    marginBottom: Spacing.md,
+    marginBottom: 24,
+    borderRadius: 20,
   },
   salaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 16,
   },
   salaryLabel: {
     fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
+    letterSpacing: 0.2,
   },
   salaryAmount: {
     fontSize: Typography.fontSize['4xl'],
     fontFamily: Typography.fontFamily.bold,
-    marginTop: Spacing.xs,
+    marginTop: 4,
+    letterSpacing: -1,
   },
   salaryIcon: {
     width: 64,
@@ -294,33 +334,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    marginBottom: Spacing.md,
+    marginBottom: 24,
+    borderRadius: 16,
   },
   cardTitle: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.md,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
   section: {
-    marginBottom: Spacing.md,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
   },
   breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
+    paddingVertical: 12,
   },
   breakdownLabel: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.regular,
     flex: 1,
   },
   breakdownValue: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.semibold,
   },
   totalLabel: {
@@ -334,8 +378,8 @@ const styles = StyleSheet.create({
   netSalaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: Spacing.md,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
   },
   netLabel: {
     fontSize: Typography.fontSize.lg,
@@ -348,55 +392,61 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
+    gap: 16,
   },
   statItem: {
     flex: 1,
     minWidth: '45%',
     alignItems: 'center',
-    padding: Spacing.md,
+    paddingVertical: 20,
+    borderRadius: 16,
   },
   statValue: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   statLabel: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
-    marginTop: Spacing.xs,
+    marginTop: 4,
     textAlign: 'center',
   },
   payslipsButton: {
-    marginBottom: Spacing.md,
+    marginBottom: 24,
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    borderRadius: 12,
+    gap: 12,
+    padding: 16,
+    borderRadius: 16,
+    marginTop: 8,
   },
   infoText: {
-    fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.base,
+    fontFamily: Typography.fontFamily.medium,
     flex: 1,
+    letterSpacing: 0.1,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: 32,
+    gap: 16,
   },
   errorText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.medium,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
     textAlign: 'center',
+    lineHeight: 28,
   },
   retryButton: {
-    minWidth: 120,
+    minWidth: 160,
+    borderRadius: 16,
+    height: 52,
   },
 });
 

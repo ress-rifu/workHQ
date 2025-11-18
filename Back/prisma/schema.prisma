@@ -28,6 +28,13 @@ enum LeaveStatus {
   CANCELLED
 }
 
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
 // Models
 model User {
   id            String         @id @default(uuid())
@@ -168,4 +175,18 @@ model Payslip {
   @@unique([employeeId, month, year])
   @@index([employeeId, year, month])
   @@index([status])
+}
+
+model Announcement {
+  id        String               @id @default(uuid())
+  title     String
+  content   String
+  createdBy String
+  priority  AnnouncementPriority @default(NORMAL)
+  isActive  Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  
+  @@index([isActive, createdAt(sort: Desc)])
+  @@index([createdBy])
 }

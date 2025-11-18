@@ -166,24 +166,29 @@ export default function EditProfileScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    marginTop: Spacing.md,
+    marginTop: 24,
+    borderRadius: 20,
+    paddingVertical: 8,
   },
   input: {
-    marginBottom: Spacing.md,
+    marginBottom: 16,
   },
   errorText: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
-    marginBottom: Spacing.md,
+    marginBottom: 16,
     textAlign: 'center',
+    lineHeight: 24,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.md,
+    gap: 16,
+    marginTop: 24,
   },
   button: {
     flex: 1,
+    borderRadius: 16,
+    height: 52,
   },
 });
 

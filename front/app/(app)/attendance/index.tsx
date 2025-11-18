@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Screen, AppHeader } from '../../../components/layout';
+import { Screen, AppHeader, Header } from '../../../components/layout';
 import { Button, Card, Badge, LoadingSpinner } from '../../../components/ui';
 import { Typography, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -348,17 +348,6 @@ function AttendanceScreenMobile() {
     }
   };
 
-  const centerMapOnUser = () => {
-    if (location && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
-  };
-
   const centerMapOnOffice = () => {
     if (officeLocation && mapRef.current) {
       mapRef.current.animateToRegion({
@@ -391,206 +380,222 @@ function AttendanceScreenMobile() {
   const canCheckOut = todayStatus?.hasCheckedIn && !todayStatus?.hasCheckedOut && !checking;
 
   return (
-    <Screen safe padding={false} hasHeader>
-      <AppHeader
-        title="Attendance"
-        subtitle="Check In & Out"
-        rightAction={{
-          icon: 'time-outline',
-          onPress: () => router.push('/attendance/history' as any),
-        }}
-      />
-
-      {/* Map View */}
-      <View style={styles.mapContainer}>
-        {officeLocation && (
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-            initialRegion={{
-              latitude: officeLocation.latitude,
-              longitude: officeLocation.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-            showsUserLocation={true}
-            showsMyLocationButton={false}
-            customMapStyle={isDark ? darkMapStyle : undefined}
-          >
-            {/* Office Location Marker */}
-            <Marker
-              coordinate={{
-                latitude: officeLocation.latitude,
-                longitude: officeLocation.longitude,
-              }}
-              title={officeLocation.name}
-              description="Office Location"
+    <Screen safe padding={false}>
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Attendance</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Check In & Out</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.iconButton, { borderColor: colors.border }]}
+              onPress={() => router.push('/attendance/history' as any)}
             >
-              <View style={[styles.markerContainer, { backgroundColor: colors.primary }]}>
-                <Ionicons name="business" size={24} color="#FFFFFF" />
-              </View>
-            </Marker>
-
-            {/* Geofence Circle */}
-            <Circle
-              center={{
-                latitude: officeLocation.latitude,
-                longitude: officeLocation.longitude,
-              }}
-              radius={officeLocation.radiusMeters}
-              fillColor={withinRadius ? 'rgba(52, 199, 89, 0.2)' : 'rgba(255, 59, 48, 0.2)'}
-              strokeColor={withinRadius ? colors.success : colors.error}
-              strokeWidth={2}
-            />
-          </MapView>
-        )}
-
-        {/* Map Controls */}
-        <View style={styles.mapControls}>
-          <Button
-            variant="outline"
-            onPress={centerMapOnOffice}
-            style={[styles.mapButton, { backgroundColor: colors.background }]}
-            icon={<Ionicons name="business-outline" size={20} color={colors.primary} />}
-          />
-          <Button
-            variant="outline"
-            onPress={centerMapOnUser}
-            loading={loadingLocation}
-            onPress={getCurrentLocation}
-            style={[styles.mapButton, { backgroundColor: colors.background }]}
-            icon={<Ionicons name="locate" size={20} color={colors.primary} />}
-          />
+              <Ionicons name="time-outline" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
-      {/* Status Cards */}
-      <View style={styles.content}>
-        {/* Distance Status */}
-        <Card padding="md" shadow="md" style={styles.card}>
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusIcon,
-                {
-                  backgroundColor: withinRadius
-                    ? colors.successLight
-                    : colors.errorLight,
-                },
-              ]}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.mapContainer}>
+          {officeLocation && (
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+              initialRegion={{
+                latitude: officeLocation.latitude,
+                longitude: officeLocation.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+              showsUserLocation={true}
+              showsMyLocationButton={false}
+              customMapStyle={isDark ? darkMapStyle : undefined}
             >
-              <Ionicons
-                name={withinRadius ? 'checkmark-circle' : 'close-circle'}
-                size={24}
-                color={withinRadius ? colors.success : colors.error}
+              <Marker
+                coordinate={{
+                  latitude: officeLocation.latitude,
+                  longitude: officeLocation.longitude,
+                }}
+                title={officeLocation.name}
+                description="Office Location"
+              >
+                <View
+                  style={[
+                    styles.markerContainer,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.background,
+                    },
+                  ]}
+                >
+                  <Ionicons name="business" size={24} color="#FFFFFF" />
+                </View>
+              </Marker>
+
+              <Circle
+                center={{
+                  latitude: officeLocation.latitude,
+                  longitude: officeLocation.longitude,
+                }}
+                radius={officeLocation.radiusMeters}
+                fillColor={withinRadius ? 'rgba(52, 199, 89, 0.2)' : 'rgba(255, 59, 48, 0.2)'}
+                strokeColor={withinRadius ? colors.success : colors.error}
+                strokeWidth={2}
               />
-            </View>
-            <View style={styles.statusInfo}>
-              <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>
-                Distance from Office
-              </Text>
-              <Text style={[styles.statusValue, { color: colors.text }]}>
-                {distance !== null ? formatDistance(distance) : 'Calculating...'}
-              </Text>
-              <Badge
-                label={withinRadius ? 'Within Range' : 'Out of Range'}
-                variant={withinRadius ? 'success' : 'error'}
-                size="sm"
-              />
-            </View>
+            </MapView>
+          )}
+
+          <View style={styles.mapControls}>
+            <TouchableOpacity
+              style={[styles.mapButton, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
+              onPress={centerMapOnOffice}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="business" size={24} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.mapButton, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
+              onPress={getCurrentLocation}
+              disabled={loadingLocation}
+              activeOpacity={0.7}
+            >
+              {loadingLocation ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name="locate" size={24} color={colors.primary} />
+              )}
+            </TouchableOpacity>
           </View>
-        </Card>
+        </View>
 
-        {/* Today's Status */}
-        {todayStatus && (
+        <View style={styles.content}>
           <Card padding="md" shadow="md" style={styles.card}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Today's Status</Text>
-            
-            <View style={styles.timeRow}>
-              <View style={styles.timeItem}>
-                <Ionicons name="log-in-outline" size={20} color={colors.success} />
-                <View style={styles.timeInfo}>
-                  <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>
-                    Check In
-                  </Text>
-                  <Text style={[styles.timeValue, { color: colors.text }]}>
-                    {todayStatus.checkIn
-                      ? new Date(todayStatus.checkIn.timestamp).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : '--:--'}
-                  </Text>
-                </View>
+            <View style={styles.statusRow}>
+              <View
+                style={[
+                  styles.statusIcon,
+                  {
+                    backgroundColor: withinRadius ? colors.successLight : colors.errorLight,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={withinRadius ? 'checkmark-circle' : 'close-circle'}
+                  size={24}
+                  color={withinRadius ? colors.success : colors.error}
+                />
               </View>
-
-              <View style={styles.timeItem}>
-                <Ionicons name="log-out-outline" size={20} color={colors.error} />
-                <View style={styles.timeInfo}>
-                  <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>
-                    Check Out
-                  </Text>
-                  <Text style={[styles.timeValue, { color: colors.text }]}>
-                    {todayStatus.checkOut
-                      ? new Date(todayStatus.checkOut.timestamp).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : '--:--'}
-                  </Text>
-                </View>
+              <View style={styles.statusInfo}>
+                <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>
+                  Distance from Office
+                </Text>
+                <Text style={[styles.statusValue, { color: colors.text }]}>
+                  {distance !== null ? formatDistance(distance) : 'Calculating...'}
+                </Text>
+                <Badge
+                  label={withinRadius ? 'Within Range' : 'Out of Range'}
+                  variant={withinRadius ? 'success' : 'error'}
+                  size="sm"
+                />
               </View>
             </View>
+          </Card>
 
-            {todayStatus.workingHours > 0 && (
-              <View style={[styles.hoursDisplay, { backgroundColor: colors.backgroundTertiary }]}>
-                <Ionicons name="time-outline" size={20} color={colors.primary} />
-                <Text style={[styles.hoursText, { color: colors.text }]}>
-                  {todayStatus.workingHours.toFixed(1)} hours worked
-                </Text>
+          {todayStatus && (
+            <Card padding="md" shadow="md" style={styles.card}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Today's Status</Text>
+
+              <View style={styles.timeRow}>
+                <View style={styles.timeItem}>
+                  <Ionicons name="log-in-outline" size={20} color={colors.success} />
+                  <View style={styles.timeInfo}>
+                    <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>
+                      Check In
+                    </Text>
+                    <Text style={[styles.timeValue, { color: colors.text }]}>
+                      {todayStatus.checkIn
+                        ? new Date(todayStatus.checkIn.timestamp).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '--:--'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.timeItem}>
+                  <Ionicons name="log-out-outline" size={20} color={colors.error} />
+                  <View style={styles.timeInfo}>
+                    <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>
+                      Check Out
+                    </Text>
+                    <Text style={[styles.timeValue, { color: colors.text }]}>
+                      {todayStatus.checkOut
+                        ? new Date(todayStatus.checkOut.timestamp).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '--:--'}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            )}
-          </Card>
-        )}
 
-        {/* Action Buttons */}
-        {canCheckIn && (
-          <Button
-            title="Check In"
-            onPress={handleCheckIn}
-            loading={checking}
-            disabled={!canCheckIn}
-            fullWidth
-            size="lg"
-            icon={<Ionicons name="log-in-outline" size={24} color="#FFFFFF" />}
-            style={styles.actionButton}
-          />
-        )}
+              {todayStatus.workingHours > 0 && (
+                <View style={[styles.hoursDisplay, { backgroundColor: colors.backgroundTertiary }]}>
+                  <Ionicons name="time-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.hoursText, { color: colors.text }]}>
+                    {todayStatus.workingHours.toFixed(1)} hours worked
+                  </Text>
+                </View>
+              )}
+            </Card>
+          )}
 
-        {canCheckOut && (
-          <Button
-            title="Check Out"
-            variant="danger"
-            onPress={handleCheckOut}
-            loading={checking}
-            disabled={!canCheckOut}
-            fullWidth
-            size="lg"
-            icon={<Ionicons name="log-out-outline" size={24} color="#FFFFFF" />}
-            style={styles.actionButton}
-          />
-        )}
+          {canCheckIn && (
+            <Button
+              title="Check In"
+              onPress={handleCheckIn}
+              loading={checking}
+              disabled={!canCheckIn}
+              fullWidth
+              size="lg"
+              icon={<Ionicons name="log-in-outline" size={24} color="#FFFFFF" />}
+              style={styles.actionButton}
+            />
+          )}
 
-        {todayStatus?.hasCheckedOut && (
-          <Card padding="lg" shadow="sm" style={styles.completedCard}>
-            <Ionicons name="checkmark-done-circle" size={48} color={colors.success} />
-            <Text style={[styles.completedText, { color: colors.text }]}>
-              Attendance complete for today!
-            </Text>
-          </Card>
-        )}
-      </View>
+          {canCheckOut && (
+            <Button
+              title="Check Out"
+              variant="danger"
+              onPress={handleCheckOut}
+              loading={checking}
+              disabled={!canCheckOut}
+              fullWidth
+              size="lg"
+              icon={<Ionicons name="log-out-outline" size={24} color="#FFFFFF" />}
+              style={styles.actionButton}
+            />
+          )}
+
+          {todayStatus?.hasCheckedOut && (
+            <Card padding="lg" shadow="sm" style={styles.completedCard}>
+              <Ionicons name="checkmark-done-circle" size={48} color={colors.success} />
+              <Text style={[styles.completedText, { color: colors.text }]}>
+                Attendance complete for today!
+              </Text>
+            </Card>
+          )}
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -678,161 +683,236 @@ const darkMapStyle = [
 ];
 
 const styles = StyleSheet.create({
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    opacity: 0.65,
+  },
+  headerTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.8,
+    lineHeight: 36,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  scrollContent: {
+    paddingBottom: 160,
+    paddingTop: 12,
+    gap: 24,
+  },
   mapContainer: {
-    height: 300,
+    height: 360,
     position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginHorizontal: 20,
+    marginTop: 16,
   },
   map: {
     flex: 1,
   },
   mapControls: {
     position: 'absolute',
-    right: Spacing.md,
-    bottom: Spacing.md,
-    gap: Spacing.sm,
+    right: 16,
+    bottom: 16,
+    gap: 12,
   },
   mapButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    padding: 0,
-  },
-  markerContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  markerContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   content: {
-    padding: Spacing.md,
+    padding: 20,
+    paddingTop: 24,
     flex: 1,
   },
   card: {
-    marginBottom: Spacing.md,
+    marginBottom: 20,
+    borderRadius: 16,
   },
   cardTitle: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.md,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 16,
   },
   statusIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
   statusInfo: {
     flex: 1,
-    gap: Spacing.xs,
+    gap: 6,
   },
   statusLabel: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
+    letterSpacing: 0.1,
   },
   statusValue: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.5,
   },
   timeRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: 16,
   },
   timeItem: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 12,
   },
   timeInfo: {
     flex: 1,
   },
   timeLabel: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
+    letterSpacing: 0.2,
   },
   timeValue: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.bold,
-    marginTop: 2,
+    marginTop: 4,
+    letterSpacing: -0.3,
   },
   hoursDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    borderRadius: 12,
-    marginTop: Spacing.md,
+    gap: 12,
+    padding: 20,
+    borderRadius: 16,
+    marginTop: 16,
   },
   hoursText: {
-    fontSize: Typography.fontSize.base,
+    fontSize: Typography.fontSize.lg,
     fontFamily: Typography.fontFamily.semibold,
+    letterSpacing: 0.1,
   },
   actionButton: {
-    marginBottom: Spacing.md,
+    marginBottom: 16,
+    borderRadius: 16,
+    height: 56,
   },
   completedCard: {
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 16,
+    paddingVertical: 32,
   },
   completedText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.semibold,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: 32,
+    gap: 16,
   },
   errorText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.xl,
     fontFamily: Typography.fontFamily.medium,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
     textAlign: 'center',
+    lineHeight: 28,
+    letterSpacing: 0.1,
   },
   retryButton: {
-    minWidth: 120,
+    minWidth: 160,
+    borderRadius: 16,
+    height: 52,
   },
   // Web-only styles
   webMessage: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
-    gap: Spacing.lg,
+    padding: 32,
+    gap: 20,
   },
   webMessageTitle: {
-    fontSize: Typography.fontSize.xxl,
+    fontSize: Typography.fontSize['3xl'],
     fontFamily: Typography.fontFamily.bold,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   webMessageText: {
-    fontSize: Typography.fontSize.md,
+    fontSize: Typography.fontSize.lg,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 28,
+    letterSpacing: 0.1,
   },
   webMessageSteps: {
-    marginTop: Spacing.lg,
-    gap: Spacing.md,
+    marginTop: 24,
+    gap: 16,
     alignSelf: 'stretch',
+    paddingHorizontal: 20,
   },
   webMessageStep: {
-    fontSize: Typography.fontSize.md,
+    fontSize: Typography.fontSize.lg,
     textAlign: 'left',
+    lineHeight: 28,
+    letterSpacing: 0.1,
   },
 });
 

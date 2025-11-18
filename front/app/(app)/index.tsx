@@ -11,6 +11,7 @@ import { attendanceService, TodayStatus } from '../../services/attendance.servic
 import { leaveService, LeaveBalance } from '../../services/leave.service';
 import { profileService, ProfileStats } from '../../services/profile.service';
 import { hrService, HRStats } from '../../services/hr.service';
+import { announcementService, Announcement } from '../../services/announcement.service';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [hrStats, setHRStats] = useState<HRStats | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
@@ -33,39 +35,45 @@ export default function HomeScreen() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      console.time('⚡ Dashboard load');
 
-      const promises = [
-        attendanceService.getTodayStatus().catch(e => ({ success: false, error: e.message })),
-        leaveService.getLeaveBalances().catch(e => ({ success: false, error: e.message })),
-        profileService.getProfileStats().catch(e => ({ success: false, error: e.message })),
+      // Build promises array for parallel execution
+      const promises: Promise<any>[] = [
+        attendanceService.getTodayStatus(),
+        leaveService.getLeaveBalances(),
+        profileService.getProfileStats(),
+        announcementService.getAnnouncements(),
       ];
 
       // Add HR stats if user is HR or Admin
       if (isHROrAdmin) {
-        promises.push(hrService.getHRStats().catch(e => ({ success: false, error: e.message })));
+        promises.push(hrService.getHRStats());
       }
 
-      const results = await Promise.all(promises);
-      const [todayRes, balancesRes, statsRes, hrStatsRes] = results;
+      // Execute all requests in parallel with error handling
+      const results = await Promise.allSettled(promises);
+      
+      // Process results safely
+      const [todayRes, balancesRes, statsRes, announcementsRes, hrStatsRes] = results;
 
-      if (todayRes.success && todayRes.data) {
-        setTodayStatus(todayRes.data);
+      if (todayRes.status === 'fulfilled' && todayRes.value.success) {
+        setTodayStatus(todayRes.value.data);
       }
 
-      if (balancesRes.success && balancesRes.data) {
-        setLeaveBalances(balancesRes.data);
+      if (balancesRes.status === 'fulfilled' && balancesRes.value.success) {
+        setLeaveBalances(balancesRes.value.data);
       }
 
-      if (statsRes.success && statsRes.data) {
-        setProfileStats(statsRes.data);
+      if (statsRes.status === 'fulfilled' && statsRes.value.success) {
+        setProfileStats(statsRes.value.data);
       }
 
-      if (hrStatsRes && hrStatsRes.success && hrStatsRes.data) {
-        setHRStats(hrStatsRes.data);
+      if (announcementsRes.status === 'fulfilled' && announcementsRes.value.success) {
+        setAnnouncements(announcementsRes.value.data || []);
       }
 
-      console.timeEnd('⚡ Dashboard load');
+      if (hrStatsRes && hrStatsRes.status === 'fulfilled' && hrStatsRes.value.success) {
+        setHRStats(hrStatsRes.value.data);
+      }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
@@ -110,34 +118,79 @@ export default function HomeScreen() {
   const attendanceStatus = getAttendanceStatus();
 
   return (
-    <Screen scrollable safe padding={false}>
+    <Screen safe padding={false}>
+      {/* Fixed Header */}
+      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {user?.email?.split('@')[0] || 'Welcome'}
+            </Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={[styles.notificationButton, { backgroundColor: colors.primaryLight }]}
+              onPress={() => router.push('/profile' as any)}
+            >
+              <Ionicons name="settings-outline" size={22} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Scrollable Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
-        <View style={[styles.header, { backgroundColor: colors.primary }]}>
-          <View style={styles.headerContent}>
-            <View style={styles.userInfo}>
-              <Avatar name={user?.email || 'User'} size="lg" />
-              <View style={styles.userDetails}>
-                <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-                <Text style={styles.userName}>{user?.email?.split('@')[0] || 'Welcome'}</Text>
-              </View>
-            </View>
-            <TouchableOpacity 
-              style={styles.notificationButton}
-              onPress={() => router.push('/profile' as any)}
-            >
-              <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* Content */}
         <View style={styles.content}>
+          {/* Announcements */}
+          {announcements.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Announcements</Text>
+                {isHROrAdmin && (
+                  <TouchableOpacity onPress={() => router.push('/announcements/create' as any)}>
+                    <Ionicons name="add-circle" size={24} color={colors.primary} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {announcements.slice(0, 3).map((announcement) => (
+                <Card key={announcement.id} padding="md" shadow="sm" style={styles.announcementCard}>
+                  <View style={styles.announcementHeader}>
+                    <Text style={[styles.announcementTitle, { color: colors.text }]}>
+                      {announcement.title}
+                    </Text>
+                    <Badge 
+                      label={announcement.priority} 
+                      variant={
+                        announcement.priority === 'URGENT' ? 'error' :
+                        announcement.priority === 'HIGH' ? 'warning' :
+                        announcement.priority === 'NORMAL' ? 'info' : 'default'
+                      }
+                      size="sm"
+                    />
+                  </View>
+                  <Text 
+                    style={[styles.announcementContent, { color: colors.textSecondary }]} 
+                    numberOfLines={2}
+                  >
+                    {announcement.content}
+                  </Text>
+                  <Text style={[styles.announcementDate, { color: colors.textTertiary }]}>
+                    {new Date(announcement.createdAt).toLocaleDateString()}
+                  </Text>
+                </Card>
+              ))}
+            </View>
+          )}
+
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
             <View style={styles.quickActions}>
@@ -289,91 +342,131 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.md,
+  fixedHeader: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  userInfo: {
+  headerLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  userDetails: {
-    marginLeft: Spacing.md,
+    gap: 12,
   },
   greeting: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.regular,
-    color: '#FFFFFF',
-    opacity: 0.9,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    opacity: 0.6,
   },
   userName: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize['3xl'],
     fontFamily: Typography.fontFamily.bold,
-    color: '#FFFFFF',
-    marginTop: 2,
+    letterSpacing: -0.8,
+    lineHeight: 36,
   },
   notificationButton: {
-    position: 'relative',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  notificationBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
+  scrollContent: {
+    paddingTop: 8,
   },
   content: {
-    padding: Spacing.md,
+    padding: 20,
   },
   section: {
-    marginBottom: Spacing.xl,
+    marginBottom: 40,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize['2xl'],
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.md,
+    letterSpacing: -0.5,
+  },
+  announcementCard: {
+    marginBottom: 12,
+    borderRadius: 16,
+  },
+  announcementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  announcementTitle: {
+    flex: 1,
+    fontSize: Typography.fontSize.lg,
+    fontFamily: Typography.fontFamily.semibold,
+    marginRight: 8,
+    letterSpacing: -0.2,
+  },
+  announcementContent: {
+    fontSize: Typography.fontSize.base,
+    fontFamily: Typography.fontFamily.regular,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  announcementDate: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
   },
   quickActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
+    gap: 16,
   },
   actionCard: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: '46%',
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderRadius: 16,
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
   actionTitle: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.semibold,
+    textAlign: 'center',
+    letterSpacing: 0.1,
   },
   badge: {
     position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
+    top: 12,
+    right: 12,
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: 8,
   },
   badgeText: {
     fontSize: Typography.fontSize.xs,
@@ -384,44 +477,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 4,
   },
   statusLabel: {
     fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
+    letterSpacing: 0.1,
   },
   statusValue: {
-    fontSize: Typography.fontSize.base,
+    fontSize: Typography.fontSize.lg,
     fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -0.3,
   },
   divider: {
     height: 1,
-    marginVertical: Spacing.md,
+    marginVertical: 20,
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    gap: 16,
   },
   statCard: {
     flex: 1,
     alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
   statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
   statValue: {
-    fontSize: Typography.fontSize['2xl'],
+    fontSize: Typography.fontSize['3xl'],
     fontFamily: Typography.fontFamily.bold,
+    letterSpacing: -1,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
     textAlign: 'center',
-    marginTop: Spacing.xs,
+    letterSpacing: 0.2,
   },
 });
 

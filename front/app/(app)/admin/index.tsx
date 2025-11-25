@@ -264,9 +264,26 @@ export default function AdminScreen() {
                         {user.email}
                       </Text>
                       {user.employee && (
-                        <Text style={[styles.userDetails, { color: colors.textSecondary }]}>
-                          {user.employee.employeeCode} • {user.employee.designation || 'N/A'}
-                        </Text>
+                        <>
+                          <Text style={[styles.userDetails, { color: colors.textSecondary }]}>
+                            Code: {user.employee.employeeCode}
+                          </Text>
+                          {user.employee.department && (
+                            <Text style={[styles.userDetails, { color: colors.textSecondary }]}>
+                              Dept: {user.employee.department}
+                            </Text>
+                          )}
+                          {user.employee.designation && (
+                            <Text style={[styles.userDetails, { color: colors.textSecondary }]}>
+                              Role: {user.employee.designation}
+                            </Text>
+                          )}
+                          {user.employee.salary && (
+                            <Text style={[styles.userDetails, { color: colors.success }]}>
+                              Salary: ${user.employee.salary.toLocaleString()}
+                            </Text>
+                          )}
+                        </>
                       )}
                     </View>
                     <Badge 

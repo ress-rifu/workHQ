@@ -7,10 +7,10 @@ import { supabase } from '../lib/supabase';
 // Use production Vercel URL by default, or env variable if set
 const BACKEND_URL =
   process.env.EXPO_PUBLIC_BACKEND_API_URL ||
-  'https://workhq-pbqtv6gip-rifus-projects-7770b67a.vercel.app';
+  'https://workhq-api.vercel.app';
 const API_URL = `${BACKEND_URL}/api`;
 const DEBUG = __DEV__; // Only log in development
-const REQUEST_TIMEOUT_MS = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS || 20000);
+const REQUEST_TIMEOUT_MS = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS || 10000); // Reduced to 10s for faster failures
 
 // Request deduplication cache
 const pendingRequests = new Map<string, Promise<any>>();
@@ -88,6 +88,30 @@ export async function apiRequest<T = any>(
 
         if (DEBUG) console.log(`✅ API Response [${endpoint}]: ${response.status}`);
 
+        // Check content type before parsing
+        const contentType = response.headers.get('content-type');
+        const isJson = contentType?.includes('application/json');
+
+        // Handle non-JSON responses (like HTML error pages)
+        if (!isJson) {
+          const text = await response.text();
+          if (DEBUG) console.error(`❌ Non-JSON response [${endpoint}]:`, text.substring(0, 200));
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              throw new Error('Authentication required. Please log in again.');
+            } else if (response.status === 404) {
+              throw new Error('Resource not found.');
+            } else if (response.status >= 500) {
+              throw new Error('Server error. Please try again later.');
+            }
+            throw new Error(`Request failed with status ${response.status}`);
+          }
+          
+          // If it's a successful non-JSON response, return empty success
+          return { success: true, data: null as any };
+        }
+
         const data = await response.json();
 
         if (!response.ok) {
@@ -105,12 +129,16 @@ export async function apiRequest<T = any>(
       }
     } catch (error: any) {
       console.error(`❌ API Error [${endpoint}]:`, error);
+      
+      // Remove from cache immediately on error (don't cache failures)
+      pendingRequests.delete(cacheKey);
+      
       return {
         success: false,
         error: error.message || 'An error occurred',
       };
     } finally {
-      // Remove from cache after completion
+      // Remove from cache after completion (success case)
       pendingRequests.delete(cacheKey);
     }
   })();

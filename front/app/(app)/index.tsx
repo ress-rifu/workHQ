@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const [hrStats, setHRStats] = useState<HRStats | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true); // Track first load
   const [refreshing, setRefreshing] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [announcementTitle, setAnnouncementTitle] = useState('');
@@ -38,51 +39,72 @@ export default function HomeScreen() {
   }, []);
 
   const loadDashboardData = async () => {
+    const startTime = performance.now();
+    
     try {
-      setLoading(true);
-
-      // Build promises array for parallel execution
-      const promises: Promise<any>[] = [
-        attendanceService.getTodayStatus(),
-        leaveService.getLeaveBalances(),
-        profileService.getProfileStats(),
-        announcementService.getAnnouncements(),
-      ];
-
-      // Add HR stats if user is HR or Admin
-      if (isHROrAdmin) {
-        promises.push(hrService.getHRStats());
+      // Don't show full-screen loading on refresh, only skeleton
+      if (!initialLoad) {
+        setLoading(false);
       }
 
-      // Execute all requests in parallel with error handling
-      const results = await Promise.allSettled(promises);
-      
+      // Use Promise.all for faster parallel execution (fail fast if critical data fails)
+      // Wrap each call to handle errors individually without blocking others
+      const [todayRes, balancesRes, statsRes, announcementsRes, hrStatsRes] = await Promise.all([
+        attendanceService.getTodayStatus().catch(err => {
+          console.error('Today status error:', err);
+          return { success: false, error: err.message };
+        }),
+        leaveService.getLeaveBalances().catch(err => {
+          console.error('Leave balances error:', err);
+          return { success: false, error: err.message };
+        }),
+        profileService.getProfileStats().catch(err => {
+          console.error('Profile stats error:', err);
+          return { success: false, error: err.message };
+        }),
+        announcementService.getAnnouncements().catch(err => {
+          console.error('Announcements error:', err);
+          return { success: false, error: err.message };
+        }),
+        // Only fetch HR stats if user is HR/Admin
+        isHROrAdmin 
+          ? hrService.getHRStats().catch(err => {
+              console.error('HR stats error:', err);
+              return { success: false, error: err.message };
+            })
+          : Promise.resolve({ success: false }),
+      ]);
+
       // Process results safely
-      const [todayRes, balancesRes, statsRes, announcementsRes, hrStatsRes] = results;
-
-      if (todayRes.status === 'fulfilled' && todayRes.value.success) {
-        setTodayStatus(todayRes.value.data);
+      if (todayRes.success) {
+        setTodayStatus(todayRes.data);
       }
 
-      if (balancesRes.status === 'fulfilled' && balancesRes.value.success) {
-        setLeaveBalances(balancesRes.value.data);
+      if (balancesRes.success) {
+        setLeaveBalances(balancesRes.data);
       }
 
-      if (statsRes.status === 'fulfilled' && statsRes.value.success) {
-        setProfileStats(statsRes.value.data);
+      if (statsRes.success) {
+        setProfileStats(statsRes.data);
       }
 
-      if (announcementsRes.status === 'fulfilled' && announcementsRes.value.success) {
-        setAnnouncements(announcementsRes.value.data || []);
+      if (announcementsRes.success) {
+        setAnnouncements(announcementsRes.data || []);
       }
 
-      if (hrStatsRes && hrStatsRes.status === 'fulfilled' && hrStatsRes.value.success) {
-        setHRStats(hrStatsRes.value.data);
+      if (hrStatsRes && hrStatsRes.success) {
+        setHRStats(hrStatsRes.data);
       }
+      
+      const endTime = performance.now();
+      const loadTime = ((endTime - startTime) / 1000).toFixed(2);
+      console.log(`⏱️ Dashboard loaded in ${loadTime}s`);
+      
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
       setRefreshing(false);
     }
   };
@@ -109,7 +131,7 @@ export default function HomeScreen() {
     return `${h}h ${m}m`;
   };
 
-  if (loading) {
+  if (loading && initialLoad) {
     return <LoadingSpinner fullScreen />;
   }
 

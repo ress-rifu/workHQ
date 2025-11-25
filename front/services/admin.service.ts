@@ -7,12 +7,14 @@ export interface AdminUser {
   role: 'ADMIN' | 'HR' | 'EMPLOYEE';
   avatarUrl: string | null;
   createdAt: string;
+  updatedAt: string;
   employee?: {
     id: string;
     employeeCode: string;
     department: string | null;
     designation: string | null;
     joinDate: string;
+    salary: number | null;
   };
 }
 

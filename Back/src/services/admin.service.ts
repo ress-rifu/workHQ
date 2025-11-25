@@ -48,13 +48,15 @@ export const adminService = {
         role: true,
         avatarUrl: true,
         createdAt: true,
+        updatedAt: true,
         employee: {
           select: {
             id: true,
             employeeCode: true,
             department: true,
             designation: true,
-            joinDate: true
+            joinDate: true,
+            salary: true
           }
         }
       },

@@ -38,13 +38,28 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'OK',
-    message: 'WorkHQ API is running',
-    timestamp: new Date().toISOString()
-  });
+// Health check endpoint with database connectivity check
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    // Try to import and check database connection
+    const { prisma } = await import('./utils/prisma');
+    await prisma.$queryRaw`SELECT 1`;
+
+    res.status(200).json({
+      status: 'OK',
+      message: 'WorkHQ API is running',
+      database: 'Connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    console.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'ERROR',
+      message: 'Service unavailable',
+      database: 'Disconnected',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Root endpoint
@@ -73,17 +88,39 @@ app.use('/api/admin', adminRoutes);
 // 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({
+    success: false,
     error: 'Not Found',
     message: `Route ${req.method} ${req.path} not found`
   });
 });
 
-// Error handler
+// Error handler - NEVER expose Prisma errors to clients
 app.use((err: any, req: Request, res: Response, next: any) => {
   console.error('Server error:', err);
-  res.status(500).json({
+
+  // Check if it's a Prisma error
+  const isPrismaError = err.code?.startsWith('P') || err.name?.includes('Prisma');
+
+  // Check if it's a database connection error
+  const isDbError = err.message?.includes('database') ||
+    err.message?.includes('connection') ||
+    err.message?.includes('ECONNREFUSED');
+
+  if (isPrismaError || isDbError) {
+    return res.status(503).json({
+      success: false,
+      error: 'Service Unavailable',
+      message: 'Database service is temporarily unavailable. Please try again later.'
+    });
+  }
+
+  // Generic error response
+  res.status(err.status || 500).json({
+    success: false,
     error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'An unexpected error occurred. Please try again later.'
   });
 });
 

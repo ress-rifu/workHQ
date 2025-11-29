@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Alert, Platform, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, ScrollView, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -16,7 +16,7 @@ const isWeb = Platform.OS === 'web';
 
 export default function AttendanceScreen() {
   const { colors } = useTheme();
-  
+
   // Show web-specific message if on web
   if (isWeb) {
     return (
@@ -60,7 +60,7 @@ function AttendanceScreenMobile() {
   const { colors, isDark } = useTheme();
   const { profile } = useAuth();
   const mapRef = useRef<MapView>(null);
-  
+
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   const [location, setLocation] = useState<ExpoLocation.LocationObject | null>(null);
@@ -73,6 +73,8 @@ function AttendanceScreenMobile() {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('Initializing...');
 
   useEffect(() => {
     initialize();
@@ -81,24 +83,27 @@ function AttendanceScreenMobile() {
   const initialize = async () => {
     try {
       console.time('⚡ Attendance initialization');
-      
+
       // Step 1: Request permission first (required)
+      setLoadingStep('Requesting location permission...');
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         setLoading(false);
+        setPermissionDenied(true);
         return;
       }
 
       // Step 2: Load everything in parallel for speed
+      setLoadingStep('Loading office location and your position...');
       console.time('⚡ Parallel API calls');
       const [officeRes, statusRes, locationRes] = await Promise.all([
         attendanceService.getPrimaryLocation().catch(err => {
           console.error('Office location error:', err);
-          return { success: false, error: err.message };
+          return { success: false, error: err.message, data: null };
         }),
         attendanceService.getTodayStatus().catch(err => {
           console.error('Today status error:', err);
-          return { success: false, error: err.message };
+          return { success: false, error: err.message, data: null };
         }),
         // Use BALANCED accuracy for faster initial load (upgrade later if needed)
         ExpoLocation.getCurrentPositionAsync({
@@ -111,9 +116,10 @@ function AttendanceScreenMobile() {
       console.timeEnd('⚡ Parallel API calls');
 
       // Process results
+      setLoadingStep('Processing location data...');
       if (officeRes.success && officeRes.data) {
         setOfficeLocation(officeRes.data);
-        
+
         // Calculate distance if we have location
         if (locationRes) {
           setLocation(locationRes);
@@ -152,14 +158,43 @@ function AttendanceScreenMobile() {
 
   const requestLocationPermission = async () => {
     try {
+      // First check current permission status
+      const { status: currentStatus } = await ExpoLocation.getForegroundPermissionsAsync();
+
+      if (currentStatus === 'granted') {
+        return true;
+      }
+
+      // Request permission
       const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-      
+
       if (status !== 'granted') {
-        setError('Location permission is required for attendance');
+        setError('Location permission is required for attendance tracking');
+
+        // Check if we can ask again or if it's permanently denied
+        const canAskAgain = status !== 'denied';
+
         Alert.alert(
-          'Permission Required',
-          'Please enable location services to use the attendance feature.',
-          [{ text: 'OK' }]
+          'Location Permission Required',
+          'WorkHQ needs access to your location to track attendance. This ensures you are at the office when checking in.',
+          canAskAgain
+            ? [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Grant Permission', onPress: () => requestLocationPermission() }
+            ]
+            : [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Open Settings',
+                onPress: () => {
+                  if (Platform.OS === 'ios') {
+                    Linking.openURL('app-settings:');
+                  } else {
+                    Linking.openSettings();
+                  }
+                }
+              }
+            ]
         );
         return false;
       }
@@ -167,6 +202,11 @@ function AttendanceScreenMobile() {
     } catch (err: any) {
       console.error('Permission error:', err);
       setError('Failed to request location permission');
+      Alert.alert(
+        'Error',
+        'Unable to request location permission. Please check your device settings.',
+        [{ text: 'OK' }]
+      );
       return false;
     }
   };
@@ -174,7 +214,7 @@ function AttendanceScreenMobile() {
   const loadOfficeLocation = async () => {
     try {
       const response = await attendanceService.getPrimaryLocation();
-      
+
       if (response.success && response.data) {
         setOfficeLocation(response.data);
       } else {
@@ -189,7 +229,7 @@ function AttendanceScreenMobile() {
     try {
       console.log('🔄 Loading today status...');
       const response = await attendanceService.getTodayStatus();
-      
+
       if (response.success && response.data) {
         console.log('✅ Today status loaded:', {
           hasCheckedIn: response.data.hasCheckedIn,
@@ -207,13 +247,13 @@ function AttendanceScreenMobile() {
   const getCurrentLocation = async () => {
     try {
       setLoadingLocation(true);
-      
+
       const loc = await ExpoLocation.getCurrentPositionAsync({
         accuracy: ExpoLocation.Accuracy.High,
       });
-      
+
       setLocation(loc);
-      
+
       if (officeLocation) {
         calculateDistance(loc);
       }
@@ -258,9 +298,9 @@ function AttendanceScreenMobile() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -283,10 +323,10 @@ function AttendanceScreenMobile() {
     }
 
     if (!withinRadius) {
-      const debugInfo = __DEV__ 
+      const debugInfo = __DEV__
         ? `\n\nDebug Info:\nYour: ${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}\nOffice: ${officeLocation.latitude.toFixed(6)}, ${officeLocation.longitude.toFixed(6)}`
         : '';
-      
+
       Alert.alert(
         'Out of Range',
         `You are ${formatDistance(distance!)} away from the office. Please be within ${officeLocation.radiusMeters}m to check in.${debugInfo}`
@@ -297,7 +337,7 @@ function AttendanceScreenMobile() {
     try {
       setChecking(true);
       console.log('⏰ Attempting check-in...');
-      
+
       const response = await attendanceService.checkIn({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -307,10 +347,10 @@ function AttendanceScreenMobile() {
       if (response.success) {
         console.log('✅ Check-in successful!', response.data);
         Alert.alert('Success', 'Checked in successfully!');
-        
+
         // Reload today's status to update UI
         await loadTodayStatus();
-        
+
         console.log('🔄 UI should now show check-in time');
       } else {
         console.error('❌ Check-in failed:', response.error);
@@ -333,7 +373,7 @@ function AttendanceScreenMobile() {
     try {
       setChecking(true);
       console.log('⏰ Attempting check-out...');
-      
+
       const response = await attendanceService.checkOut({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -342,10 +382,10 @@ function AttendanceScreenMobile() {
       if (response.success) {
         console.log('✅ Check-out successful!', response.data);
         Alert.alert('Success', 'Checked out successfully!');
-        
+
         // Reload today's status to update UI
         await loadTodayStatus();
-        
+
         console.log('🔄 UI should now show check-out time');
       } else {
         console.error('❌ Check-out failed:', response.error);
@@ -371,7 +411,53 @@ function AttendanceScreenMobile() {
   };
 
   if (loading) {
-    return <LoadingSpinner fullScreen />;
+    return (
+      <Screen safe>
+        <Header title="Attendance" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>{loadingStep}</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (permissionDenied) {
+    return (
+      <Screen safe>
+        <Header title="Attendance" />
+        <View style={styles.errorContainer}>
+          <Ionicons name="location-outline" size={64} color={colors.error} />
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Location Permission Required</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+            WorkHQ needs access to your location to track attendance and verify you are at the office.
+          </Text>
+          <View style={styles.errorActions}>
+            <Button
+              title="Grant Permission"
+              onPress={async () => {
+                setPermissionDenied(false);
+                setLoading(true);
+                await initialize();
+              }}
+              style={styles.retryButton}
+            />
+            <Button
+              title="Open Settings"
+              variant="outline"
+              onPress={() => {
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('app-settings:');
+                } else {
+                  Linking.openSettings();
+                }
+              }}
+              style={styles.retryButton}
+            />
+          </View>
+        </View>
+      </Screen>
+    );
   }
 
   if (error && !officeLocation) {
@@ -433,10 +519,6 @@ function AttendanceScreenMobile() {
               customMapStyle={isDark ? darkMapStyle : undefined}
               onMapReady={() => {
                 console.log('✅ Map loaded successfully');
-              }}
-              onError={(error) => {
-                console.error('❌ MapView error:', error);
-                setError('Map failed to load. Please try again.');
               }}
             >
               <Marker
@@ -550,9 +632,9 @@ function AttendanceScreenMobile() {
                     <Text style={[styles.timeValue, { color: colors.text }]}>
                       {todayStatus.checkIn
                         ? new Date(todayStatus.checkIn.timestamp).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
                         : '--:--'}
                     </Text>
                   </View>
@@ -567,9 +649,9 @@ function AttendanceScreenMobile() {
                     <Text style={[styles.timeValue, { color: colors.text }]}>
                       {todayStatus.checkOut
                         ? new Date(todayStatus.checkOut.timestamp).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
                         : '--:--'}
                     </Text>
                   </View>
@@ -905,6 +987,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -0.3,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    gap: 20,
+  },
+  loadingText: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: Typography.fontFamily.medium,
+    textAlign: 'center',
+    letterSpacing: 0.1,
+  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -912,15 +1007,28 @@ const styles = StyleSheet.create({
     padding: 32,
     gap: 16,
   },
+  errorTitle: {
+    fontSize: Typography.fontSize['2xl'],
+    fontFamily: Typography.fontFamily.bold,
+    textAlign: 'center',
+    letterSpacing: -0.5,
+    marginTop: 8,
+  },
   errorText: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 24,
     letterSpacing: 0.1,
+    maxWidth: 320,
+  },
+  errorActions: {
+    marginTop: 16,
+    gap: 12,
+    width: '100%',
+    maxWidth: 280,
   },
   retryButton: {
-    minWidth: 160,
     borderRadius: 16,
     height: 52,
   },

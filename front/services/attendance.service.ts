@@ -98,13 +98,14 @@ export const attendanceService = {
     endDate?: string;
     limit?: number;
   }) {
-    const query = new URLSearchParams();
-    if (params?.startDate) query.append('startDate', params.startDate);
-    if (params?.endDate) query.append('endDate', params.endDate);
-    if (params?.limit) query.append('limit', params.limit.toString());
+    const queryParts: string[] = [];
+    if (params?.startDate) queryParts.push(`startDate=${encodeURIComponent(params.startDate)}`);
+    if (params?.endDate) queryParts.push(`endDate=${encodeURIComponent(params.endDate)}`);
+    if (params?.limit) queryParts.push(`limit=${params.limit}`);
 
-    const endpoint = query.toString()
-      ? `/attendance/history?${query.toString()}`
+    const queryString = queryParts.length > 0 ? queryParts.join('&') : '';
+    const endpoint = queryString
+      ? `/attendance/history?${queryString}`
       : '/attendance/history';
 
     return api.get<AttendanceDay[]>(endpoint);
@@ -114,12 +115,13 @@ export const attendanceService = {
    * Get attendance statistics
    */
   async getStats(month?: number, year?: number) {
-    const query = new URLSearchParams();
-    if (month) query.append('month', month.toString());
-    if (year) query.append('year', year.toString());
+    const queryParts: string[] = [];
+    if (month) queryParts.push(`month=${month}`);
+    if (year) queryParts.push(`year=${year}`);
 
-    const endpoint = query.toString()
-      ? `/attendance/stats?${query.toString()}`
+    const queryString = queryParts.length > 0 ? queryParts.join('&') : '';
+    const endpoint = queryString
+      ? `/attendance/stats?${queryString}`
       : '/attendance/stats';
 
     return api.get<AttendanceStats>(endpoint);

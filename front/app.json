@@ -20,6 +20,7 @@
 			}
 		},
 		"android": {
+			"icon": "./assets/icon.png",
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/adaptive-icon.png",
 				"backgroundColor": "#0B5FFF"
@@ -48,12 +49,6 @@
 				"expo-location",
 				{
 					"locationAlwaysAndWhenInUsePermission": "Allow WorkHQ to use your location for attendance tracking."
-				}
-			],
-			[
-				"react-native-maps",
-				{
-					"googleMapsApiKey": "AIzaSyAPzHKUv5HCr3PbM9v-cV5gggH7VZdXSv0"
 				}
 			]
 		],

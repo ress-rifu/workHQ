@@ -50,6 +50,12 @@
 				{
 					"locationAlwaysAndWhenInUsePermission": "Allow WorkHQ to use your location for attendance tracking."
 				}
+			],
+			[
+				"react-native-maps",
+				{
+					"googleMapsApiKey": "AIzaSyAPzHKUv5HCr3PbM9v-cV5gggH7VZdXSv0"
+				}
 			]
 		],
 		"extra": {

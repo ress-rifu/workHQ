@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, Platform } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -13,11 +12,29 @@ import { adminService, AdminLocation } from '../../../services/admin.service';
 
 const isWeb = Platform.OS === 'web';
 
+// Conditionally import react-native-maps only on native platforms
+let MapView: any = null;
+let Marker: any = null;
+let Circle: any = null;
+let PROVIDER_GOOGLE: any = null;
+
+if (!isWeb) {
+  try {
+    const Maps = require('react-native-maps');
+    MapView = Maps.default;
+    Marker = Maps.Marker;
+    Circle = Maps.Circle;
+    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.warn('react-native-maps not available');
+  }
+}
+
 export default function LocationsManagementScreen() {
   const router = useRouter();
   const { profile } = useAuth();
   const { colors, isDark } = useTheme();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
 
   const [locations, setLocations] = useState<AdminLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -299,7 +316,7 @@ export default function LocationsManagementScreen() {
     }, 1000);
   };
 
-  if (isWeb) {
+  if (isWeb || !MapView) {
     return (
       <Screen safe padding={false}>
         <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
@@ -316,10 +333,13 @@ export default function LocationsManagementScreen() {
         <View style={[styles.webMessage, { backgroundColor: colors.background }]}>
           <Ionicons name="map-outline" size={64} color={colors.primary} />
           <Text style={[styles.webMessageTitle, { color: colors.text }]}>
-            Mobile Only Feature
+            {isWeb ? 'Mobile Only Feature' : 'Development Build Required'}
           </Text>
           <Text style={[styles.webMessageText, { color: colors.textSecondary }]}>
-            Location management with maps is only available on mobile devices.
+            {isWeb 
+              ? 'Location management with maps is only available on mobile devices.'
+              : 'Maps require a development build. Please run `npx expo run:android` or `npx expo run:ios` to use this feature.'
+            }
           </Text>
         </View>
       </Screen>

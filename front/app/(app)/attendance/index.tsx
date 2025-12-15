@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, Alert, Platform, ScrollView, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -13,6 +12,24 @@ import { attendanceService, Location, TodayStatus } from '../../../services/atte
 
 // Web platform check - Maps don't work on web
 const isWeb = Platform.OS === 'web';
+
+// Conditionally import react-native-maps only on native platforms
+let MapView: any = null;
+let Marker: any = null;
+let Circle: any = null;
+let PROVIDER_GOOGLE: any = null;
+
+if (!isWeb) {
+  try {
+    const Maps = require('react-native-maps');
+    MapView = Maps.default;
+    Marker = Maps.Marker;
+    Circle = Maps.Circle;
+    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.warn('react-native-maps not available');
+  }
+}
 
 export default function AttendanceScreen() {
   const { colors } = useTheme();
@@ -52,6 +69,24 @@ export default function AttendanceScreen() {
     );
   }
 
+  // If maps not available, show mobile-only message
+  if (!MapView) {
+    return (
+      <Screen hasHeader>
+        <AppHeader title="Attendance" subtitle="Check In & Out" />
+        <View style={[styles.webMessage, { backgroundColor: colors.background }]}>
+          <Ionicons name="phone-portrait-outline" size={64} color={colors.primary} />
+          <Text style={[styles.webMessageTitle, { color: colors.text }]}>
+            Development Build Required
+          </Text>
+          <Text style={[styles.webMessageText, { color: colors.textSecondary }]}>
+            Maps require a development build. Please run `npx expo run:android` or `npx expo run:ios` to use this feature.
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
+
   return <AttendanceScreenMobile />;
 }
 
@@ -59,7 +94,7 @@ function AttendanceScreenMobile() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { profile } = useAuth();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
 
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 

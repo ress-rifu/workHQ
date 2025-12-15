@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Pressable } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -23,7 +23,7 @@ interface SidebarProps {
 export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { isOpen, closeSidebar } = useSidebar();
 
   const handleItemPress = (item: SidebarItem) => {
@@ -36,6 +36,10 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
   };
 
   const isActiveItem = (item: SidebarItem) => {
+    // Exact match for root paths
+    if (item.path === '/' || item.path === '/attendance') {
+      return pathname === item.path;
+    }
     return pathname === item.path || pathname.startsWith(`${item.path}/`);
   };
 
@@ -57,7 +61,7 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
             style={[styles.container, { backgroundColor: colors.card }]}
           >
             {/* Header */}
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
               <View style={styles.headerContent}>
                 <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
                 {subtitle && (
@@ -65,10 +69,10 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
                 )}
               </View>
               <TouchableOpacity
-                style={styles.closeButton}
+                style={[styles.closeButton, { backgroundColor: colors.backgroundTertiary }]}
                 onPress={closeSidebar}
               >
-                <Ionicons name="close" size={24} color={colors.text} />
+                <Ionicons name="close" size={20} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -81,38 +85,50 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
               {items.map((item) => {
                 const isActive = isActiveItem(item);
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={item.id}
-                    style={[
+                    style={({ pressed }) => [
                       styles.item,
-                      isActive && { backgroundColor: colors.primaryLight },
+                      { backgroundColor: isActive 
+                          ? colors.primary 
+                          : pressed 
+                            ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'
+                            : 'transparent' 
+                      },
                     ]}
                     onPress={() => handleItemPress(item)}
-                    activeOpacity={0.7}
                   >
                     <View style={styles.itemContent}>
-                      <Ionicons
-                        name={item.icon}
-                        size={22}
-                        color={isActive ? colors.primary : colors.textSecondary}
-                      />
+                      <View style={[
+                        styles.iconContainer,
+                        { backgroundColor: isActive 
+                            ? 'rgba(255,255,255,0.2)' 
+                            : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' 
+                        }
+                      ]}>
+                        <Ionicons
+                          name={item.icon}
+                          size={20}
+                          color={isActive ? '#FFFFFF' : colors.textSecondary}
+                        />
+                      </View>
                       <Text
                         style={[
                           styles.itemLabel,
-                          { color: isActive ? colors.primary : colors.text },
+                          { color: isActive ? '#FFFFFF' : colors.text },
                         ]}
                       >
                         {item.label}
                       </Text>
                     </View>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                        <Text style={styles.badgeText}>
+                      <View style={[styles.badge, { backgroundColor: isActive ? '#FFFFFF' : colors.error }]}>
+                        <Text style={[styles.badgeText, { color: isActive ? colors.primary : '#FFFFFF' }]}>
                           {item.badge > 99 ? '99+' : item.badge}
                         </Text>
                       </View>
                     )}
-                  </TouchableOpacity>
+                  </Pressable>
                 );
               })}
             </ScrollView>
@@ -152,19 +168,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   container: {
-    width: 280,
+    width: 300,
     height: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
   },
   header: {
     padding: 24,
-    paddingTop: 48,
+    paddingTop: 52,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -173,9 +188,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -197,24 +212,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingTop: 24,
-    gap: 8,
+    padding: 12,
+    paddingTop: 20,
+    gap: 4,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    marginBottom: 4,
   },
   itemContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
     flex: 1,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   itemLabel: {
     fontSize: Typography.fontSize.base,
@@ -222,16 +244,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   badge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
-    paddingHorizontal: 8,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
   badgeText: {
     fontSize: Typography.fontSize.xs,
     fontFamily: Typography.fontFamily.bold,
-    color: '#FFFFFF',
   },
 });

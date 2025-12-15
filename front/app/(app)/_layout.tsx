@@ -58,6 +58,12 @@ export default function AppLayout() {
       path: '/attendance',
     },
     {
+      id: 'attendance-history',
+      label: 'Attendance History',
+      icon: 'time',
+      path: '/attendance/history',
+    },
+    {
       id: 'leave',
       label: 'Leave',
       icon: 'calendar',

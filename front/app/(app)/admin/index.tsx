@@ -197,7 +197,7 @@ export default function AdminScreen() {
               <Card 
                 style={styles.actionCard} 
                 shadow="sm" 
-                onPress={() => router.push('/attendance/history' as any)}
+                onPress={() => router.push('/attendance-history' as any)}
               >
                 <View style={[styles.actionIcon, { backgroundColor: colors.successLight }]}>
                   <Ionicons name="time" size={24} color={colors.success} />

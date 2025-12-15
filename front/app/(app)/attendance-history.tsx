@@ -1,17 +1,17 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import { Screen, SidebarToggle } from '../../../components/layout';
-import { Card, Badge, LoadingSpinner, Button } from '../../../components/ui';
-import { Typography } from '../../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { Screen, SidebarToggle } from '../../components/layout';
+import { Card, Badge, LoadingSpinner, Button } from '../../components/ui';
+import { Typography } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { 
   attendanceService, 
   AttendanceDay, 
   EmployeeListItem, 
   MonthlyAttendanceDay 
-} from '../../../services/attendance.service';
+} from '../../services/attendance.service';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -667,3 +667,4 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
   },
 });
+

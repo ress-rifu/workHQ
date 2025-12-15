@@ -61,7 +61,7 @@ export default function AppLayout() {
       id: 'attendance-history',
       label: 'Attendance History',
       icon: 'time',
-      path: '/attendance/history',
+      path: '/attendance-history',
     },
     {
       id: 'leave',
@@ -141,6 +141,13 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="location" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="attendance-history"
+        options={{
+          title: 'Attendance History',
+          href: null, // Hide from tabs, accessible via sidebar
         }}
       />
       <Tabs.Screen

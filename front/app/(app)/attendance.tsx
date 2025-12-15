@@ -2,13 +2,13 @@ import { View, Text, StyleSheet, Alert, Platform, ScrollView, TouchableOpacity, 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import * as ExpoLocation from 'expo-location';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import { Screen, AppHeader, Header, SidebarToggle } from '../../../components/layout';
-import { Button, Card, Badge, LoadingSpinner } from '../../../components/ui';
-import { Typography, Spacing } from '../../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { Screen, AppHeader, Header, SidebarToggle } from '../../components/layout';
+import { Button, Card, Badge, LoadingSpinner } from '../../components/ui';
+import { Typography, Spacing } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { attendanceService, Location, TodayStatus } from '../../../services/attendance.service';
+import { attendanceService, Location, TodayStatus } from '../../services/attendance.service';
 
 // Web platform check - Maps don't work on web
 const isWeb = Platform.OS === 'web';
@@ -525,7 +525,7 @@ function AttendanceScreenMobile() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[styles.iconButton, { borderColor: colors.border }]}
-              onPress={() => router.push('/attendance/history' as any)}
+              onPress={() => router.push('/attendance-history' as any)}
             >
               <Ionicons name="time-outline" size={20} color={colors.text} />
             </TouchableOpacity>
@@ -1100,5 +1100,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 });
-
 

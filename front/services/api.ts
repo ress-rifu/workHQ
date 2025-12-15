@@ -41,6 +41,21 @@ supabase.auth.onAuthStateChange((_event, session) => {
 });
 
 /**
+ * Clear cached token and sign out when token is invalid
+ */
+async function handleInvalidToken() {
+  cachedAccessToken = null;
+  hasLoadedToken = false;
+  tokenLoadPromise = null;
+  
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore sign out errors
+  }
+}
+
+/**
  * Check if backend is reachable
  */
 async function checkBackendHealth(): Promise<boolean> {
@@ -240,6 +255,8 @@ export async function apiRequest<T = any>(
 
           if (!response.ok) {
             if (response.status === 401) {
+              if (DEBUG) console.log('🔐 Token invalid - signing out');
+              await handleInvalidToken();
               throw new Error('Your session has expired. Please log in again.');
             } else if (response.status === 404) {
               throw new Error('The requested resource was not found.');
@@ -256,6 +273,11 @@ export async function apiRequest<T = any>(
         const data = await response.json();
 
         if (!response.ok) {
+          // Handle 401 - clear token and sign out
+          if (response.status === 401) {
+            if (DEBUG) console.log('🔐 Token invalid - signing out');
+            await handleInvalidToken();
+          }
           throw new Error(data.message || data.error || 'Request failed');
         }
 

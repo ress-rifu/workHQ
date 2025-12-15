@@ -126,8 +126,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				const errorText = await response.text();
 				console.error("❌ Failed to fetch profile:", response.status, errorText);
 
-				// Don't block auth if profile fetch fails
-				// User is still authenticated via Supabase
+				// If we get 401, the token is invalid/expired - clear session
+				if (response.status === 401) {
+					console.log('🔐 Token expired/invalid - clearing session');
+					await clearInvalidSession();
+					return;
+				}
 			}
 		} catch (error: any) {
 			if (isInvalidRefreshTokenError(error)) {

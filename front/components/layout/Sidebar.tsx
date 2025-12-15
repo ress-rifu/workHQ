@@ -31,7 +31,8 @@ export function Sidebar({ title, subtitle, items, onItemPress }: SidebarProps) {
     if (onItemPress) {
       onItemPress(item);
     } else {
-      router.push(item.path as any);
+      // Use navigate for cleaner navigation without stacking
+      router.navigate(item.path as any);
     }
   };
 

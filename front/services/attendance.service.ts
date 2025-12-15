@@ -54,6 +54,31 @@ export interface CheckOutData {
   longitude: number;
 }
 
+export interface EmployeeListItem {
+  id: string;
+  employeeCode: string;
+  department: string | null;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+  };
+}
+
+export interface MonthlyAttendanceDay {
+  date: string;
+  checkIn: Attendance | null;
+  checkOut: Attendance | null;
+  status: 'present' | 'late' | 'absent';
+  workingHours: number;
+}
+
+export interface EmployeeMonthlyAttendance {
+  employee: EmployeeListItem;
+  attendance: MonthlyAttendanceDay[];
+}
+
 export const attendanceService = {
   /**
    * Get all office locations
@@ -125,6 +150,37 @@ export const attendanceService = {
       : '/attendance/stats';
 
     return api.get<AttendanceStats>(endpoint);
+  },
+
+  /**
+   * Get all employees list (HR/Admin only)
+   */
+  async getAllEmployees() {
+    return api.get<EmployeeListItem[]>('/attendance/employees');
+  },
+
+  /**
+   * Get employee monthly attendance (HR/Admin only)
+   */
+  async getEmployeeMonthlyAttendance(employeeId: string, month?: number, year?: number) {
+    const queryParts: string[] = [];
+    if (month) queryParts.push(`month=${month}`);
+    if (year) queryParts.push(`year=${year}`);
+
+    const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    return api.get<MonthlyAttendanceDay[]>(`/attendance/employee/${employeeId}/monthly${queryString}`);
+  },
+
+  /**
+   * Get all employees monthly attendance (HR/Admin only)
+   */
+  async getAllEmployeesMonthlyAttendance(month?: number, year?: number) {
+    const queryParts: string[] = [];
+    if (month) queryParts.push(`month=${month}`);
+    if (year) queryParts.push(`year=${year}`);
+
+    const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    return api.get<EmployeeMonthlyAttendance[]>(`/attendance/all/monthly${queryString}`);
   },
 };
 

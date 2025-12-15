@@ -29,5 +29,15 @@ router.get('/history', cachePresets.medium, attendanceController.getHistory);
 // GET /api/attendance/stats - Get attendance statistics
 router.get('/stats', cachePresets.medium, attendanceController.getStats);
 
+// HR/Admin routes
+// GET /api/attendance/employees - Get all employees list
+router.get('/employees', cachePresets.medium, attendanceController.getAllEmployees);
+
+// GET /api/attendance/employee/:employeeId/monthly - Get employee monthly attendance
+router.get('/employee/:employeeId/monthly', cachePresets.medium, attendanceController.getEmployeeMonthlyAttendance);
+
+// GET /api/attendance/all/monthly - Get all employees monthly attendance
+router.get('/all/monthly', cachePresets.medium, attendanceController.getAllEmployeesMonthlyAttendance);
+
 export default router;
 

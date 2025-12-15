@@ -378,5 +378,127 @@ export const attendanceService = {
       year: targetYear,
     };
   },
+
+  /**
+   * Get all employees list (for HR/Admin)
+   */
+  async getAllEmployees() {
+    return await prisma.employee.findMany({
+      select: {
+        id: true,
+        employeeCode: true,
+        department: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        user: {
+          fullName: 'asc',
+        },
+      },
+    });
+  },
+
+  /**
+   * Get attendance for a specific employee by month (for HR/Admin calendar view)
+   */
+  async getEmployeeMonthlyAttendance(employeeId: string, month: number, year: number) {
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+    const attendance = await prisma.attendance.findMany({
+      where: {
+        employeeId,
+        timestamp: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: {
+        timestamp: 'asc',
+      },
+      select: {
+        id: true,
+        type: true,
+        timestamp: true,
+        latitude: true,
+        longitude: true,
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Group by date
+    const grouped: Record<string, any> = {};
+    
+    attendance.forEach((record) => {
+      const date = record.timestamp.toISOString().split('T')[0];
+      
+      if (!grouped[date]) {
+        grouped[date] = {
+          date,
+          checkIn: null,
+          checkOut: null,
+          status: 'absent', // default
+          workingHours: 0,
+        };
+      }
+
+      if (record.type === 'CHECKIN') {
+        grouped[date].checkIn = record;
+        // Check if late (after 9:00 AM)
+        const checkInTime = new Date(record.timestamp);
+        const lateThreshold = new Date(checkInTime);
+        lateThreshold.setHours(9, 0, 0, 0);
+        
+        if (checkInTime > lateThreshold) {
+          grouped[date].status = 'late';
+        } else {
+          grouped[date].status = 'present';
+        }
+      } else if (record.type === 'CHECKOUT') {
+        grouped[date].checkOut = record;
+      }
+    });
+
+    // Calculate working hours
+    Object.values(grouped).forEach((day: any) => {
+      if (day.checkIn && day.checkOut) {
+        const diff = new Date(day.checkOut.timestamp).getTime() - new Date(day.checkIn.timestamp).getTime();
+        day.workingHours = diff / (1000 * 60 * 60);
+      }
+    });
+
+    return Object.values(grouped);
+  },
+
+  /**
+   * Get all employees' attendance for a month (for HR/Admin)
+   */
+  async getAllEmployeesMonthlyAttendance(month: number, year: number) {
+    const employees = await this.getAllEmployees();
+    
+    const result = await Promise.all(
+      employees.map(async (emp) => {
+        const attendance = await this.getEmployeeMonthlyAttendance(emp.id, month, year);
+        return {
+          employee: emp,
+          attendance,
+        };
+      })
+    );
+
+    return result;
+  },
 };
 

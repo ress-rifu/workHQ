@@ -11,7 +11,7 @@ interface ApplyLeaveData {
 
 export const leaveService = {
   /**
-   * Get all leave types
+   * Get all leave types (deduplicated by name)
    */
   async getLeaveTypes() {
     // Cache for 1 hour (static data)
@@ -27,6 +27,7 @@ export const leaveService = {
         isPaid: true,
       },
       orderBy: { name: 'asc' },
+      distinct: ['name'],
     });
 
     cache.set(cacheKey, types, cacheTTL.veryLong);
@@ -34,7 +35,7 @@ export const leaveService = {
   },
 
   /**
-   * Get leave balances for an employee
+   * Get leave balances for an employee (deduplicated by leave type name)
    */
   async getLeaveBalances(employeeId: string) {
     // Cache for 5 minutes
@@ -63,8 +64,18 @@ export const leaveService = {
       },
     });
 
-    cache.set(cacheKey, balances, cacheTTL.medium);
-    return balances;
+    // Deduplicate by leave type name, keeping the first occurrence
+    const seen = new Set<string>();
+    const uniqueBalances = balances.filter((balance) => {
+      if (seen.has(balance.leaveType.name)) {
+        return false;
+      }
+      seen.add(balance.leaveType.name);
+      return true;
+    });
+
+    cache.set(cacheKey, uniqueBalances, cacheTTL.medium);
+    return uniqueBalances;
   },
 
   /**

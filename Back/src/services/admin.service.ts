@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma';
+import { supabaseAdmin } from '../utils/supabase';
 import { Role } from '@prisma/client';
 import { createUser } from './auth.service';
 
@@ -38,8 +39,66 @@ export const adminService = {
 
   /**
    * Get all users (Admin only)
+   * Syncs Supabase Auth users with database
    */
   async getAllUsers() {
+    // Get users from Supabase Auth
+    const { data: authUsers, error } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (error) {
+      console.error('Error fetching auth users:', error);
+      // Fallback to database only
+      return await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          role: true,
+          avatarUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          employee: {
+            select: {
+              id: true,
+              employeeCode: true,
+              department: true,
+              designation: true,
+              joinDate: true,
+              salary: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    // Sync auth users to database if missing
+    for (const authUser of authUsers.users) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: authUser.id }
+      });
+
+      if (!existingUser) {
+        // Create missing user in database
+        const metadata = authUser.user_metadata || {};
+        try {
+          await prisma.user.create({
+            data: {
+              id: authUser.id,
+              email: authUser.email || '',
+              fullName: metadata.full_name || metadata.name || authUser.email?.split('@')[0] || 'Unknown',
+              role: (metadata.role as Role) || 'EMPLOYEE',
+              avatarUrl: metadata.avatar_url || null
+            }
+          });
+        } catch (e) {
+          // Ignore duplicate errors
+          console.error('Error syncing user:', e);
+        }
+      }
+    }
+
+    // Now fetch all users from database with employee data
     return await prisma.user.findMany({
       select: {
         id: true,

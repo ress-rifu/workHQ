@@ -197,7 +197,7 @@ export default function AdminScreen() {
               <Card 
                 style={styles.actionCard} 
                 shadow="sm" 
-                onPress={() => router.push('/admin/attendance' as any)}
+                onPress={() => router.push('/attendance/history' as any)}
               >
                 <View style={[styles.actionIcon, { backgroundColor: colors.successLight }]}>
                   <Ionicons name="time" size={24} color={colors.success} />
@@ -296,31 +296,18 @@ export default function AdminScreen() {
 
                   <View style={styles.userActions}>
                     <TouchableOpacity
-                      style={[styles.roleButton, { backgroundColor: colors.errorLight }]}
-                      onPress={() => handleUpdateRole(user.id, 'ADMIN')}
-                      disabled={user.role === 'ADMIN'}
+                      style={[styles.actionButton, { backgroundColor: colors.infoLight }]}
+                      onPress={() => router.push(`/hr/${user.employee?.id || user.id}` as any)}
                     >
-                      <Text style={[styles.roleButtonText, { color: colors.error }]}>Admin</Text>
+                      <Ionicons name="create-outline" size={18} color={colors.info} />
+                      <Text style={[styles.actionButtonText, { color: colors.info }]}>Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.roleButton, { backgroundColor: colors.warningLight }]}
-                      onPress={() => handleUpdateRole(user.id, 'HR')}
-                      disabled={user.role === 'HR'}
-                    >
-                      <Text style={[styles.roleButtonText, { color: colors.warning }]}>HR</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.roleButton, { backgroundColor: colors.primaryLight }]}
-                      onPress={() => handleUpdateRole(user.id, 'EMPLOYEE')}
-                      disabled={user.role === 'EMPLOYEE'}
-                    >
-                      <Text style={[styles.roleButtonText, { color: colors.primary }]}>Employee</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
+                      style={[styles.actionButton, { backgroundColor: colors.errorLight }]}
                       onPress={() => handleDeleteUser(user.id, user.fullName)}
                     >
-                      <Ionicons name="trash" size={20} color={colors.error} />
+                      <Ionicons name="trash-outline" size={18} color={colors.error} />
+                      <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete</Text>
                     </TouchableOpacity>
                   </View>
                 </Card>
@@ -568,23 +555,19 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  roleButton: {
+  actionButton: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  roleButtonText: {
-    fontSize: Typography.fontSize.xs,
-    fontFamily: Typography.fontFamily.bold,
-    textTransform: 'uppercase',
-  },
-  deleteButton: {
-    width: 40,
-    height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  actionButtonText: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.semibold,
   },
   errorText: {
     fontSize: Typography.fontSize.base,

@@ -317,5 +317,115 @@ export const attendanceController = {
       });
     }
   },
+
+  /**
+   * GET /api/attendance/employees
+   * Get all employees list (HR/Admin only)
+   */
+  async getAllEmployees(req: Request, res: Response) {
+    try {
+      const userRole = req.user?.role;
+
+      if (userRole !== 'HR' && userRole !== 'ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'HR or Admin access required',
+        });
+      }
+
+      const employees = await attendanceService.getAllEmployees();
+
+      return res.json({
+        success: true,
+        data: employees,
+      });
+    } catch (error: any) {
+      console.error('Get employees error:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch employees',
+      });
+    }
+  },
+
+  /**
+   * GET /api/attendance/employee/:employeeId/monthly
+   * Get monthly attendance for a specific employee (HR/Admin only)
+   */
+  async getEmployeeMonthlyAttendance(req: Request, res: Response) {
+    try {
+      const userRole = req.user?.role;
+
+      if (userRole !== 'HR' && userRole !== 'ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'HR or Admin access required',
+        });
+      }
+
+      const { employeeId } = req.params;
+      const { month, year } = req.query;
+
+      const now = new Date();
+      const targetMonth = month ? parseInt(month as string) - 1 : now.getMonth();
+      const targetYear = year ? parseInt(year as string) : now.getFullYear();
+
+      const attendance = await attendanceService.getEmployeeMonthlyAttendance(
+        employeeId,
+        targetMonth,
+        targetYear
+      );
+
+      return res.json({
+        success: true,
+        data: attendance,
+      });
+    } catch (error: any) {
+      console.error('Get employee monthly attendance error:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch employee attendance',
+      });
+    }
+  },
+
+  /**
+   * GET /api/attendance/all/monthly
+   * Get all employees' monthly attendance (HR/Admin only)
+   */
+  async getAllEmployeesMonthlyAttendance(req: Request, res: Response) {
+    try {
+      const userRole = req.user?.role;
+
+      if (userRole !== 'HR' && userRole !== 'ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'HR or Admin access required',
+        });
+      }
+
+      const { month, year } = req.query;
+
+      const now = new Date();
+      const targetMonth = month ? parseInt(month as string) - 1 : now.getMonth();
+      const targetYear = year ? parseInt(year as string) : now.getFullYear();
+
+      const attendance = await attendanceService.getAllEmployeesMonthlyAttendance(
+        targetMonth,
+        targetYear
+      );
+
+      return res.json({
+        success: true,
+        data: attendance,
+      });
+    } catch (error: any) {
+      console.error('Get all employees monthly attendance error:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch attendance data',
+      });
+    }
+  },
 };
 

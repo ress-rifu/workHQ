@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from 'react';
-import { View, StyleSheet, ViewStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { View, StyleSheet, ViewStyle, Pressable, PressableProps } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { spacing, radius } from '../../constants/theme';
 
@@ -9,7 +9,7 @@ interface CardProps {
   padding?: keyof typeof spacing;
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   onPress?: () => void;
-  touchableProps?: Omit<TouchableOpacityProps, 'style' | 'onPress'>;
+  pressableProps?: Omit<PressableProps, 'style' | 'onPress'>;
 }
 
 export const Card = React.memo(function Card({
@@ -18,43 +18,46 @@ export const Card = React.memo(function Card({
   padding = 'lg', // Default to generous spacing
   shadow = 'sm',
   onPress,
-  touchableProps,
+  pressableProps,
 }: CardProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
-  const combinedStyle = useMemo(() => {
+  const getCardStyle = (pressed: boolean): ViewStyle[] => {
     const cardStyle: ViewStyle = {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg, // Soft, rounded corners
+      backgroundColor: pressed && onPress 
+        ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)')
+        : colors.card,
+      borderRadius: radius.lg,
       padding: spacing[padding],
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderLight,
+      borderColor: pressed && onPress ? colors.border : colors.borderLight,
+      transform: [{ scale: pressed && onPress ? 0.995 : 1 }],
     };
 
-    const depthStyle = getDepthStyle(shadow, colors);
+    const depthStyle = getDepthStyle(shadow, colors, pressed && !!onPress);
 
-    return [cardStyle, depthStyle, style];
-  }, [colors, padding, shadow, style]);
+    return [cardStyle, depthStyle, style as ViewStyle];
+  };
 
   if (onPress) {
     return (
-      <TouchableOpacity
-        {...touchableProps}
+      <Pressable
+        {...pressableProps}
         onPress={onPress}
-        style={combinedStyle}
-        activeOpacity={0.7}
+        style={({ pressed }) => getCardStyle(pressed)}
       >
         {children}
-      </TouchableOpacity>
+      </Pressable>
     );
   }
 
-  return <View style={combinedStyle}>{children}</View>;
+  return <View style={getCardStyle(false)}>{children}</View>;
 });
 
 function getDepthStyle(
   shadow: NonNullable<CardProps['shadow']>,
-  colors: ReturnType<typeof useTheme>['colors']
+  colors: ReturnType<typeof useTheme>['colors'],
+  pressed: boolean
 ): ViewStyle {
   switch (shadow) {
     case 'none':
@@ -62,25 +65,22 @@ function getDepthStyle(
     case 'sm':
       return {
         borderWidth: StyleSheet.hairlineWidth * 2,
-        borderColor: colors.border,
+        borderColor: pressed ? colors.primary : colors.border,
       };
     case 'md':
       return {
         borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.surfaceVariant,
+        borderColor: pressed ? colors.primary : colors.border,
       };
     case 'lg':
       return {
         borderWidth: 1,
-        borderColor: colors.primaryLight,
-        backgroundColor: colors.surfaceVariant,
+        borderColor: pressed ? colors.primary : colors.primaryLight,
       };
     case 'xl':
       return {
         borderWidth: 1.5,
         borderColor: colors.primary,
-        backgroundColor: colors.backgroundSecondary,
       };
     default:
       return {};

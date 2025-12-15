@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
-  TouchableOpacity,
+  Pressable,
   View,
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -39,37 +39,37 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
   onPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const isDisabled = disabled || loading;
 
-  const buttonStyle: ViewStyle = {
-    backgroundColor: (() => {
-      if (isDisabled) return colors.border;
-      switch (variant) {
-        case 'primary':
-          return colors.primary;
-        case 'secondary':
-          return colors.backgroundTertiary;
-        case 'outline':
-        case 'ghost':
-          return 'transparent';
-        case 'danger':
-          return colors.error;
-        default:
-          return colors.primary;
-      }
-    })(),
-    borderWidth: variant === 'outline' ? 1.5 : 0,
-    borderColor: variant === 'outline' ? (isDisabled ? colors.border : colors.primary) : 'transparent',
-    paddingVertical: size === 'sm' ? 10 : size === 'lg' ? 16 : 12,
-    paddingHorizontal: size === 'sm' ? 20 : size === 'lg' ? 32 : 24,
-    minHeight: size === 'sm' ? 40 : size === 'lg' ? 56 : 48,
+  const getBackgroundColor = (pressed: boolean) => {
+    if (isDisabled) return colors.border;
+    
+    switch (variant) {
+      case 'primary':
+        return pressed ? colors.primaryDark : colors.primary;
+      case 'secondary':
+        return pressed 
+          ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)') 
+          : colors.backgroundTertiary;
+      case 'outline':
+        return pressed ? colors.primaryContainer : 'transparent';
+      case 'ghost':
+        return pressed 
+          ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') 
+          : 'transparent';
+      case 'danger':
+        return pressed ? colors.errorLight : colors.error;
+      default:
+        return colors.primary;
+    }
   };
 
   const textColor = (() => {
     if (isDisabled) return colors.textTertiary;
     switch (variant) {
       case 'primary':
+        return '#FFFFFF';
       case 'danger':
         return '#FFFFFF';
       case 'secondary':
@@ -85,13 +85,20 @@ export const Button: React.FC<ButtonProps> = ({
   const fontSize = size === 'sm' ? Typography.fontSize.sm : size === 'lg' ? Typography.fontSize.lg : Typography.fontSize.base;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}
-      style={[
+      style={({ pressed }) => [
         styles.button,
-        buttonStyle,
+        {
+          backgroundColor: getBackgroundColor(pressed),
+          borderWidth: variant === 'outline' ? 1.5 : 0,
+          borderColor: variant === 'outline' ? (isDisabled ? colors.border : colors.primary) : 'transparent',
+          paddingVertical: size === 'sm' ? 10 : size === 'lg' ? 16 : 12,
+          paddingHorizontal: size === 'sm' ? 20 : size === 'lg' ? 32 : 24,
+          minHeight: size === 'sm' ? 40 : size === 'lg' ? 56 : 48,
+          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
+        },
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
@@ -117,7 +124,7 @@ export const Button: React.FC<ButtonProps> = ({
           </Text>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

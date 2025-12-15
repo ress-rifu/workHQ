@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UserProfile {
 	id: string;
@@ -31,7 +32,7 @@ interface AuthContextType {
 		fullName: string
 	) => Promise<{ error: Error | null }>;
 	resetPassword: (email: string) => Promise<{ error: Error | null }>;
-	fetchProfile: () => Promise<void>;
+	fetchProfile: (sessionOverride?: Session | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,66 +43,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		// Get initial session with timeout
-		const initAuth = async () => {
-			console.log('🔐 Initializing auth...');
-			try {
-        // Set a timeout to prevent infinite loading
-				const timeoutId = setTimeout(() => {
-					console.warn('⚠️ Auth initialization timeout - continuing without session');
-					setLoading(false);
-				}, 1500);				const { data: { session }, error } = await supabase.auth.getSession();
+	const getAuthStorageKey = () => {
+		try {
+			const url = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://rdkgfezrowfnlrbtiekn.supabase.co";
+			const hostname = new URL(url).hostname;
+			const projectRef = hostname.split(".")[0];
+			return `sb-${projectRef}-auth-token`;
+		} catch {
+			return null;
+		}
+	};
 
-				clearTimeout(timeoutId);
+	const isInvalidRefreshTokenError = (err: any) => {
+		const message = String(err?.message || err || "");
+		return (
+			message.includes("Invalid Refresh Token") ||
+			message.includes("Refresh Token Not Found") ||
+			message.includes("refresh token")
+		);
+	};
 
-				if (error) {
-					console.error('❌ Auth error:', error.message);
-					setLoading(false);
-					return;
-				}
-
-				console.log('✅ Session loaded:', session ? 'Authenticated' : 'Not authenticated');
-				setSession(session);
-				setUser(session?.user ?? null);
-				
-				if (session) {
-					await fetchProfile();
-				} else {
-					setLoading(false);
-				}
-			} catch (error: any) {
-				console.error('❌ Auth initialization error:', error.message);
-				setLoading(false);
+	const clearInvalidSession = async () => {
+		try {
+			const key = getAuthStorageKey();
+			if (key) {
+				await AsyncStorage.removeItem(key);
 			}
-		};
+		} catch {
+			// noop
+		}
 
-		initAuth();
+		try {
+			await supabase.auth.signOut();
+		} catch {
+			// noop
+		}
 
-		// Listen for auth changes
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((_event, session) => {
-			setSession(session);
-			setUser(session?.user ?? null);
-			if (session) {
-				fetchProfile();
-			} else {
-				setProfile(null);
-				setLoading(false);
-			}
-		});
+		setSession(null);
+		setUser(null);
+		setProfile(null);
+	};
 
-		return () => subscription.unsubscribe();
-	}, []);
-
-	const fetchProfile = async () => {
+	const fetchProfile = async (sessionOverride?: Session | null) => {
 		if (__DEV__) console.log('👤 Fetching profile...');
 		try {
-			const {
-				data: { session },
-			} = await supabase.auth.getSession();
-			if (!session) {
+			const activeSession =
+				typeof sessionOverride !== "undefined"
+					? sessionOverride
+					: (await supabase.auth.getSession()).data.session;
+
+			if (!activeSession) {
 				if (__DEV__) console.log('❌ No session available');
 				setProfile(null);
 				setLoading(false);
@@ -121,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				`${process.env.EXPO_PUBLIC_BACKEND_API_URL}/api/auth/profile`,
 				{
 					headers: {
-						Authorization: `Bearer ${session.access_token}`,
+						Authorization: `Bearer ${activeSession.access_token}`,
 						"Content-Type": "application/json",
 					},
 				}
@@ -139,6 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				// User is still authenticated via Supabase
 			}
 		} catch (error: any) {
+			if (isInvalidRefreshTokenError(error)) {
+				await clearInvalidSession();
+			}
 			console.error("❌ Error fetching profile:", error.message);
 			// Don't block auth if profile fetch fails
 		} finally {
@@ -146,6 +140,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		// Get initial session with timeout
+		const initAuth = async () => {
+			console.log('🔐 Initializing auth...');
+			try {
+        // Set a timeout to prevent infinite loading
+				const timeoutId = setTimeout(() => {
+					console.warn('⚠️ Auth initialization timeout - continuing without session');
+					setLoading(false);
+				}, 1500);
+
+				const { data: { session }, error } = await supabase.auth.getSession();
+
+				clearTimeout(timeoutId);
+
+				if (error) {
+					if (isInvalidRefreshTokenError(error)) {
+						await clearInvalidSession();
+					}
+					console.error('❌ Auth error:', error.message);
+					setLoading(false);
+					return;
+				}
+
+				console.log('✅ Session loaded:', session ? 'Authenticated' : 'Not authenticated');
+				setSession(session);
+				setUser(session?.user ?? null);
+				
+				if (session) {
+					await fetchProfile(session);
+				} else {
+					setLoading(false);
+				}
+			} catch (error: any) {
+				if (isInvalidRefreshTokenError(error)) {
+					await clearInvalidSession();
+				}
+				console.error('❌ Auth initialization error:', error.message);
+				setLoading(false);
+			}
+		};
+
+		initAuth();
+
+		// Listen for auth changes
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange((_event, session) => {
+			setSession(session);
+			setUser(session?.user ?? null);
+			if (session) {
+				fetchProfile(session);
+			} else {
+				setProfile(null);
+				setLoading(false);
+			}
+		});
+
+		return () => subscription.unsubscribe();
+	}, []);
 
 	const signIn = async (email: string, password: string) => {
 		try {
@@ -168,8 +223,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			return { error: null };
 		} catch (error: any) {
+			if (isInvalidRefreshTokenError(error)) {
+				await clearInvalidSession();
+			}
 			console.error('❌ Sign in error:', error.message);
-			console.error('❌ Full error:', JSON.stringify(error, null, 2));
+			if (__DEV__) {
+				console.error('❌ Sign in error details:', {
+					name: error?.name,
+					message: error?.message,
+					status: error?.status,
+					code: error?.code,
+				});
+			}
 			return { error };
 		}
 	};

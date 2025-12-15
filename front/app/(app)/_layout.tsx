@@ -1,13 +1,14 @@
 import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, InteractionManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sidebar, SidebarItem } from '../../components/layout';
 import { Layout, radius, spacing } from '../../constants/theme';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { hrService } from '../../services/hr.service';
+import { useQuery } from '@tanstack/react-query';
 
 export default function AppLayout() {
   const { colors } = useTheme();
@@ -16,24 +17,32 @@ export default function AppLayout() {
   
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
   const isAdmin = profile?.role === 'ADMIN';
-  const [pendingLeaves, setPendingLeaves] = useState(0);
+  const [canFetchHRStats, setCanFetchHRStats] = useState(false);
 
   useEffect(() => {
-    if (isHROrAdmin) {
-      loadHRStats();
+    if (!isHROrAdmin) {
+      setCanFetchHRStats(false);
+      return;
     }
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      setCanFetchHRStats(true);
+    });
+
+    return () => task.cancel();
   }, [isHROrAdmin]);
 
-  const loadHRStats = async () => {
-    try {
-      const response = await hrService.getHRStats();
-      if (response.success && response.data) {
-        setPendingLeaves(response.data.pendingLeaves);
-      }
-    } catch (err) {
-      console.error('Failed to load HR stats:', err);
-    }
-  };
+  const hrStatsQuery = useQuery({
+    queryKey: ['hrStats'],
+    enabled: isHROrAdmin && canFetchHRStats,
+    queryFn: async () => {
+      const res = await hrService.getHRStats();
+      if (!res.success || !res.data) throw new Error(res.error || res.message || 'Failed to load HR stats');
+      return res.data;
+    },
+  });
+
+  const pendingLeaves = hrStatsQuery.data?.pendingLeaves ?? 0;
 
   const sidebarItems: SidebarItem[] = [
     {

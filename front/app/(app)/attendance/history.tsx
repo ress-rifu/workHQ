@@ -30,8 +30,13 @@ export default function AttendanceHistoryScreen() {
         attendanceService.getStats(),
       ]);
 
-      if (historyRes.success && historyRes.data) {
-        setHistory(historyRes.data);
+      if (historyRes.success) {
+        if (Array.isArray(historyRes.data)) {
+          setHistory(historyRes.data);
+        } else {
+          setHistory([]);
+          setError(prev => prev || 'Unexpected attendance history response');
+        }
       }
 
       if (statsRes.success && statsRes.data) {
@@ -171,7 +176,7 @@ export default function AttendanceHistoryScreen() {
             Recent Attendance
           </Text>
 
-          {history.length === 0 ? (
+          {(!Array.isArray(history) || history.length === 0) ? (
             <Card padding="lg" shadow="sm">
               <View style={styles.emptyState}>
                 <Ionicons name="calendar-outline" size={48} color={colors.textTertiary} />
@@ -181,7 +186,7 @@ export default function AttendanceHistoryScreen() {
               </View>
             </Card>
           ) : (
-            history.map((day, index) => (
+            history.map((day) => (
               <Card key={day.date} padding="md" shadow="sm" style={styles.historyCard}>
                 <View style={styles.historyHeader}>
                   <View style={styles.historyDateContainer}>

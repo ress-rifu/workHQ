@@ -82,7 +82,7 @@ function AttendanceScreenMobile() {
 
   const initialize = async () => {
     try {
-      console.time('⚡ Attendance initialization');
+      const initStart = Date.now();
 
       // Step 1: Request permission first (required)
       setLoadingStep('Requesting location permission...');
@@ -95,7 +95,7 @@ function AttendanceScreenMobile() {
 
       // Step 2: Load everything in parallel for speed
       setLoadingStep('Loading office location and your position...');
-      console.time('⚡ Parallel API calls');
+      const parallelStart = Date.now();
       const [officeRes, statusRes, locationRes] = await Promise.all([
         attendanceService.getPrimaryLocation().catch(err => {
           console.error('Office location error:', err);
@@ -113,7 +113,7 @@ function AttendanceScreenMobile() {
           return null;
         }),
       ]);
-      console.timeEnd('⚡ Parallel API calls');
+      if (__DEV__) console.log(`⚡ Parallel calls: ${Date.now() - parallelStart}ms`);
 
       // Process results
       setLoadingStep('Processing location data...');
@@ -148,7 +148,7 @@ function AttendanceScreenMobile() {
       }
 
       setLoading(false);
-      console.timeEnd('⚡ Attendance initialization');
+      if (__DEV__) console.log(`⚡ Attendance initialization: ${Date.now() - initStart}ms`);
     } catch (err: any) {
       console.error('❌ Attendance initialization error:', err);
       setError(err.message || 'Failed to initialize attendance');

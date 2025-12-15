@@ -28,6 +28,18 @@ let backendHealthy: boolean | null = null;
 let lastHealthCheck: number = 0;
 const HEALTH_CHECK_INTERVAL = 60000; // Check every 60 seconds
 
+// In-memory access token cache to avoid calling supabase.auth.getSession() per request
+let cachedAccessToken: string | null = null;
+let hasLoadedToken = false;
+let tokenLoadPromise: Promise<string | null> | null = null;
+
+// Keep token in sync with auth state changes
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedAccessToken = session?.access_token ?? null;
+  hasLoadedToken = true;
+  tokenLoadPromise = null;
+});
+
 /**
  * Check if backend is reachable
  */
@@ -79,11 +91,24 @@ export interface ApiResponse<T = any> {
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) {
-      return null;
-    }
-    return session.access_token;
+    if (hasLoadedToken) return cachedAccessToken;
+    if (tokenLoadPromise) return tokenLoadPromise;
+
+    tokenLoadPromise = (async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        cachedAccessToken = null;
+        hasLoadedToken = true;
+        return null;
+      }
+      cachedAccessToken = session.access_token;
+      hasLoadedToken = true;
+      return cachedAccessToken;
+    })().finally(() => {
+      tokenLoadPromise = null;
+    });
+
+    return await tokenLoadPromise;
   } catch (error) {
     console.error('Error getting auth token:', error);
     return null;

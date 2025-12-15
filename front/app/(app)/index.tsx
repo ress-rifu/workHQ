@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert } from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -10,8 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { attendanceService, TodayStatus } from '../../services/attendance.service';
 import { leaveService, LeaveBalance } from '../../services/leave.service';
 import { profileService, ProfileStats } from '../../services/profile.service';
-import { hrService, HRStats } from '../../services/hr.service';
+import { hrService } from '../../services/hr.service';
 import { announcementService, Announcement, AnnouncementPriority } from '../../services/announcement.service';
+import { useQuery } from '@tanstack/react-query';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,7 +22,6 @@ export default function HomeScreen() {
   const [todayStatus, setTodayStatus] = useState<TodayStatus | null>(null);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
-  const [hrStats, setHRStats] = useState<HRStats | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true); // Track first load
@@ -35,21 +35,24 @@ export default function HomeScreen() {
   const isHROrAdmin = profile?.role === 'HR' || profile?.role === 'ADMIN';
 
   useEffect(() => {
-    loadDashboardData();
+    loadCriticalDashboardData().finally(() => {
+      loadSecondaryDashboardData();
+    });
   }, []);
 
-  const loadDashboardData = async () => {
-    const startTime = performance.now();
-    
-    try {
-      // Don't show full-screen loading on refresh, only skeleton
-      if (!initialLoad) {
-        setLoading(false);
-      }
+  const hrStatsQuery = useQuery({
+    queryKey: ['hrStats'],
+    enabled: isHROrAdmin,
+    queryFn: async () => {
+      const res = await hrService.getHRStats();
+      if (!res.success || !res.data) throw new Error(res.error || res.message || 'Failed to load HR stats');
+      return res.data;
+    },
+  });
 
-      // Use Promise.all for faster parallel execution (fail fast if critical data fails)
-      // Wrap each call to handle errors individually without blocking others
-      const [todayRes, balancesRes, statsRes, announcementsRes, hrStatsRes] = await Promise.all([
+  const loadCriticalDashboardData = async () => {
+    try {
+      const [todayRes, balancesRes] = await Promise.all([
         attendanceService.getTodayStatus().catch(err => {
           console.error('Today status error:', err);
           return { success: false, error: err.message };
@@ -58,21 +61,6 @@ export default function HomeScreen() {
           console.error('Leave balances error:', err);
           return { success: false, error: err.message };
         }),
-        profileService.getProfileStats().catch(err => {
-          console.error('Profile stats error:', err);
-          return { success: false, error: err.message };
-        }),
-        announcementService.getAnnouncements().catch(err => {
-          console.error('Announcements error:', err);
-          return { success: false, error: err.message };
-        }),
-        // Only fetch HR stats if user is HR/Admin
-        isHROrAdmin 
-          ? hrService.getHRStats().catch(err => {
-              console.error('HR stats error:', err);
-              return { success: false, error: err.message };
-            })
-          : Promise.resolve({ success: false }),
       ]);
 
       // Process results safely
@@ -83,6 +71,26 @@ export default function HomeScreen() {
       if (balancesRes.success) {
         setLeaveBalances(balancesRes.data);
       }
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+    } finally {
+      setLoading(false);
+      setInitialLoad(false);
+    }
+  };
+
+  const loadSecondaryDashboardData = async () => {
+    try {
+      const [statsRes, announcementsRes] = await Promise.all([
+        profileService.getProfileStats().catch(err => {
+          console.error('Profile stats error:', err);
+          return { success: false, error: err.message };
+        }),
+        announcementService.getAnnouncements().catch(err => {
+          console.error('Announcements error:', err);
+          return { success: false, error: err.message };
+        }),
+      ]);
 
       if (statsRes.success) {
         setProfileStats(statsRes.data);
@@ -91,28 +99,27 @@ export default function HomeScreen() {
       if (announcementsRes.success) {
         setAnnouncements(announcementsRes.data || []);
       }
-
-      if (hrStatsRes && hrStatsRes.success) {
-        setHRStats(hrStatsRes.data);
-      }
-      
-      const endTime = performance.now();
-      const loadTime = ((endTime - startTime) / 1000).toFixed(2);
-      console.log(`⏱️ Dashboard loaded in ${loadTime}s`);
-      
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
+      console.error('Failed to load dashboard secondary data:', err);
+    }
+  };
+
+  const loadDashboardDataForRefresh = async () => {
+    try {
+      await Promise.all([
+        loadCriticalDashboardData(),
+        loadSecondaryDashboardData(),
+        isHROrAdmin ? hrStatsQuery.refetch() : Promise.resolve(),
+      ]);
     } finally {
-      setLoading(false);
-      setInitialLoad(false);
       setRefreshing(false);
     }
   };
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = () => {
     setRefreshing(true);
-    loadDashboardData();
-  }, []);
+    loadDashboardDataForRefresh();
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -224,7 +231,7 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
             <View style={styles.quickActions}>
-              {isHROrAdmin && hrStats && (
+              {isHROrAdmin && hrStatsQuery.data && (
                 <Card 
                   style={styles.actionCard} 
                   shadow="sm" 
@@ -236,9 +243,9 @@ export default function HomeScreen() {
                   <Text style={[styles.actionTitle, { color: colors.text }]}>
                     Leave Requests
                   </Text>
-                  {hrStats.pendingLeaves > 0 && (
+                  {hrStatsQuery.data.pendingLeaves > 0 && (
                     <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                      <Text style={styles.badgeText}>{hrStats.pendingLeaves}</Text>
+                      <Text style={styles.badgeText}>{hrStatsQuery.data.pendingLeaves}</Text>
                     </View>
                   )}
                 </Card>

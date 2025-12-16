@@ -24,6 +24,6 @@ ENV EXPO_TOKEN=s6yW8CXMWWsQa4FtFBNm1KyINosiAT18U6K3JnQl
 ENV EXPO_PUBLIC_SUPABASE_URL=https://rdkgfezrowfnlrbtiekn.supabase.co
 ENV EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJka2dmZXpyb3dmbmxyYnRpZWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4OTUyNzEsImV4cCI6MjA3NzQ3MTI3MX0.UV_PmsUcpsrOmM5bn4Y8xrlFJCRvHX1dJOieykXwDIs
 
-# Start Expo with clean cache
-CMD ["npx", "expo", "start", "-c"]
+# Start Expo
+CMD ["npx", "expo", "start", "--clear"]
 

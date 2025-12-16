@@ -69,7 +69,16 @@ export default function HomeScreen() {
       }
 
       if (balancesRes.success) {
-        setLeaveBalances(balancesRes.data);
+        // Deduplicate balances by leave type name (keep first occurrence)
+        const seen = new Set<string>();
+        const uniqueBalances = (balancesRes.data || []).filter((balance: LeaveBalance) => {
+          if (seen.has(balance.leaveType.name)) {
+            return false;
+          }
+          seen.add(balance.leaveType.name);
+          return true;
+        });
+        setLeaveBalances(uniqueBalances);
       }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);

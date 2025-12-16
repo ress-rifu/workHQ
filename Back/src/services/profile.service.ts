@@ -209,14 +209,24 @@ export const profileService = {
       }),
     ]);
 
-    // Calculate total leave balance
-    const totalLeaveBalance = leaveBalances.reduce(
+    // Deduplicate leave balances by leave type name (keep first occurrence)
+    const seen = new Set<string>();
+    const uniqueLeaveBalances = leaveBalances.filter((balance: any) => {
+      if (seen.has(balance.leaveType.name)) {
+        return false;
+      }
+      seen.add(balance.leaveType.name);
+      return true;
+    });
+
+    // Calculate total leave balance from deduplicated list
+    const totalLeaveBalance = uniqueLeaveBalances.reduce(
       (sum: number, balance: any) => sum + balance.balanceDays,
       0
     );
 
     const stats = {
-      leaveBalances,
+      leaveBalances: uniqueLeaveBalances,
       attendanceThisMonth: attendanceCount,
       pendingLeaves: pendingLeavesCount,
       totalLeaveBalance,

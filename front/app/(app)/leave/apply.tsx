@@ -39,9 +39,19 @@ export default function ApplyLeaveScreen() {
       const response = await leaveService.getLeaveTypes();
       
       if (response.success && response.data) {
-        setLeaveTypes(response.data);
-        if (response.data.length > 0) {
-          setSelectedLeaveType(response.data[0]);
+        // Deduplicate leave types by name (keep first occurrence)
+        const seen = new Set<string>();
+        const uniqueTypes = response.data.filter((type: LeaveType) => {
+          if (seen.has(type.name)) {
+            return false;
+          }
+          seen.add(type.name);
+          return true;
+        });
+        
+        setLeaveTypes(uniqueTypes);
+        if (uniqueTypes.length > 0) {
+          setSelectedLeaveType(uniqueTypes[0]);
         }
       } else {
         setError(response.error || 'Failed to load leave types');

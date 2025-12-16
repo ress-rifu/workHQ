@@ -10,25 +10,43 @@ export const leaveKeys = {
   detail: (id: string) => [...leaveKeys.all, 'detail', id] as const,
 };
 
-// Fetch leave types
+// Fetch leave types (deduplicated by name)
 export function useLeaveTypes() {
   return useQuery({
     queryKey: leaveKeys.types(),
     queryFn: async () => {
       const response = await api.get('/leave/types');
-      return response.data;
+      // Deduplicate leave types by name
+      const seen = new Set<string>();
+      const uniqueTypes = (response.data || []).filter((type: any) => {
+        if (seen.has(type.name)) {
+          return false;
+        }
+        seen.add(type.name);
+        return true;
+      });
+      return uniqueTypes;
     },
     staleTime: 1000 * 60 * 60, // Leave types don't change often, stay fresh for 1 hour
   });
 }
 
-// Fetch leave balances
+// Fetch leave balances (deduplicated by leave type name)
 export function useLeaveBalances() {
   return useQuery({
     queryKey: leaveKeys.balances(),
     queryFn: async () => {
       const response = await api.get('/leave/balances');
-      return response.data;
+      // Deduplicate balances by leave type name
+      const seen = new Set<string>();
+      const uniqueBalances = (response.data || []).filter((balance: any) => {
+        if (seen.has(balance.leaveType.name)) {
+          return false;
+        }
+        seen.add(balance.leaveType.name);
+        return true;
+      });
+      return uniqueBalances;
     },
   });
 }

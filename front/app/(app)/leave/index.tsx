@@ -40,7 +40,16 @@ export default function LeaveScreen() {
       const [balancesRes, applicationsRes] = results;
 
       if (balancesRes.status === 'fulfilled' && balancesRes.value.success) {
-        setBalances(balancesRes.value.data || []);
+        // Deduplicate balances by leave type name (keep first occurrence)
+        const seen = new Set<string>();
+        const uniqueBalances = (balancesRes.value.data || []).filter((balance: LeaveBalance) => {
+          if (seen.has(balance.leaveType.name)) {
+            return false;
+          }
+          seen.add(balance.leaveType.name);
+          return true;
+        });
+        setBalances(uniqueBalances);
       }
 
       if (applicationsRes.status === 'fulfilled' && applicationsRes.value.success) {

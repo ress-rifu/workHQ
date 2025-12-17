@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { queryClient } from "../lib/queryClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UserProfile {
@@ -78,6 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		} catch {
 			// noop
 		}
+
+		// Clear React Query cache
+		queryClient.clear();
 
 		setSession(null);
 		setUser(null);
@@ -244,6 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	};
 
 	const signOut = async () => {
+		// Clear React Query cache before signing out
+		queryClient.clear();
+		
 		await supabase.auth.signOut();
 		setProfile(null);
 	};

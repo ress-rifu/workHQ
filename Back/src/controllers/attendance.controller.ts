@@ -324,15 +324,6 @@ export const attendanceController = {
    */
   async getAllEmployees(req: Request, res: Response) {
     try {
-      const userRole = req.user?.role;
-
-      if (userRole !== 'HR' && userRole !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'HR or Admin access required',
-        });
-      }
-
       const employees = await attendanceService.getAllEmployees();
 
       return res.json({
@@ -354,15 +345,6 @@ export const attendanceController = {
    */
   async getEmployeeMonthlyAttendance(req: Request, res: Response) {
     try {
-      const userRole = req.user?.role;
-
-      if (userRole !== 'HR' && userRole !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'HR or Admin access required',
-        });
-      }
-
       const { employeeId } = req.params;
       const { month, year } = req.query;
 
@@ -395,15 +377,6 @@ export const attendanceController = {
    */
   async getAllEmployeesMonthlyAttendance(req: Request, res: Response) {
     try {
-      const userRole = req.user?.role;
-
-      if (userRole !== 'HR' && userRole !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'HR or Admin access required',
-        });
-      }
-
       const { month, year } = req.query;
 
       const now = new Date();

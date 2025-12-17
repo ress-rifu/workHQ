@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { attendanceController } from '../controllers/attendance.controller';
 import { authenticate } from '../middleware/auth';
+import { authorize, isHROrAdmin } from '../middleware/authorize';
 import { cachePresets } from '../middleware/cache-headers';
 
 const router = Router();
@@ -29,15 +30,15 @@ router.get('/history', cachePresets.medium, attendanceController.getHistory);
 // GET /api/attendance/stats - Get attendance statistics
 router.get('/stats', cachePresets.medium, attendanceController.getStats);
 
-// HR/Admin routes
-// GET /api/attendance/employees - Get all employees list
-router.get('/employees', cachePresets.medium, attendanceController.getAllEmployees);
+// HR/Admin routes - Must be placed AFTER employee routes to avoid conflicts
+// GET /api/attendance/employees - Get all employees list (HR/Admin only)
+router.get('/employees', isHROrAdmin, cachePresets.medium, attendanceController.getAllEmployees);
 
-// GET /api/attendance/employee/:employeeId/monthly - Get employee monthly attendance
-router.get('/employee/:employeeId/monthly', cachePresets.medium, attendanceController.getEmployeeMonthlyAttendance);
+// GET /api/attendance/all/monthly - Get all employees monthly attendance (HR/Admin only)
+router.get('/all/monthly', isHROrAdmin, cachePresets.medium, attendanceController.getAllEmployeesMonthlyAttendance);
 
-// GET /api/attendance/all/monthly - Get all employees monthly attendance
-router.get('/all/monthly', cachePresets.medium, attendanceController.getAllEmployeesMonthlyAttendance);
+// GET /api/attendance/employee/:employeeId/monthly - Get employee monthly attendance (HR/Admin only)
+router.get('/employee/:employeeId/monthly', isHROrAdmin, cachePresets.medium, attendanceController.getEmployeeMonthlyAttendance);
 
 export default router;
 

@@ -9,13 +9,6 @@ export const adminController = {
    */
   async createUser(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { email, password, fullName, role, employeeCode, department, designation, joinDate, salary } = req.body;
 
       // Validation
@@ -82,13 +75,6 @@ export const adminController = {
    */
   async getAllUsers(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const users = await adminService.getAllUsers();
 
       return res.json({
@@ -110,13 +96,6 @@ export const adminController = {
    */
   async updateUserRole(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { id } = req.params;
       const { role } = req.body;
 
@@ -149,13 +128,6 @@ export const adminController = {
    */
   async deleteUser(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { id } = req.params;
 
       await adminService.deleteUser(id);
@@ -179,13 +151,6 @@ export const adminController = {
    */
   async getAllLocations(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const locations = await adminService.getAllLocations();
 
       return res.json({
@@ -207,13 +172,6 @@ export const adminController = {
    */
   async createLocation(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { name, latitude, longitude, radiusMeters } = req.body;
 
       if (!name || !latitude || !longitude) {
@@ -250,13 +208,6 @@ export const adminController = {
    */
   async updateLocation(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { id } = req.params;
       const { name, latitude, longitude, radiusMeters } = req.body;
 
@@ -287,13 +238,6 @@ export const adminController = {
    */
   async deleteLocation(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { id } = req.params;
 
       await adminService.deleteLocation(id);
@@ -317,13 +261,6 @@ export const adminController = {
    */
   async getAllAttendance(req: Request, res: Response) {
     try {
-      if (req.user?.role !== 'ADMIN') {
-        return res.status(403).json({
-          success: false,
-          message: 'Admin access required'
-        });
-      }
-
       const { startDate, endDate, employeeId } = req.query;
 
       const filters: any = {};

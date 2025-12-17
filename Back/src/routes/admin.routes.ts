@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/admin.controller';
 import { authenticate } from '../middleware/auth';
+import { isAdmin } from '../middleware/authorize';
 
 const router = Router();
 
 // All routes require authentication and admin role
 router.use(authenticate);
+router.use(isAdmin);
 
 // User management
 router.post('/users', adminController.createUser);

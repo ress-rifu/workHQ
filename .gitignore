@@ -1,7 +1,11 @@
 # Root .gitignore for WorkHQ
 
 # Environment variables (CRITICAL - Never commit!)
+.env
+.env.local
+.env.production
 .env*.local
+**/.env
 **/.env.local
 
 # Dependencies
@@ -71,4 +75,3 @@ temp/
 *.p7b
 
 .vercel
-config.bat
